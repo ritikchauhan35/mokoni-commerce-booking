@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, Download, CheckCircle, AlertCircle } from 'lucide-react';
+import { Product } from '@/types';
 import { 
   parseCSVFile, 
   autoDetectFields, 
@@ -121,7 +123,6 @@ const CSVImportModal: React.FC<CSVImportModalProps> = ({ isOpen, onClose }) => {
     window.URL.revokeObjectURL(url);
   };
 
-  // Fix the field mapping update function
   const updateFieldMapping = (header: string, value: string) => {
     setFieldMapping(prev => ({
       ...prev,
