@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Search, Eye, Edit, Calendar } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { getAllBookings } from '@/services/firestore';
+import { getAllBookings } from '@/services';
 import { Booking } from '@/types';
 import BookingStatusModal from '@/components/admin/BookingStatusModal';
 

@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { Booking } from '@/types';
-import { updateBookingStatus } from '@/services/firestore';
+import { updateBookingStatus } from '@/services';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 

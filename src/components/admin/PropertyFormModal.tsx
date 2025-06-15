@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { Property } from '@/types';
-import { addProperty, updateProperty } from '@/services/firestore';
+import { addProperty, updateProperty } from '@/services';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 

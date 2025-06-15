@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Search, Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getProducts, deleteProduct } from '@/services/firestore';
+import { getProducts, deleteProduct } from '@/services';
 import { Product } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import ProductFormModal from '@/components/admin/ProductFormModal';

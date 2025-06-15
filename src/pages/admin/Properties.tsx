@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Plus, Edit, Trash2, Eye, Users, Bed } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getProperties, deleteProperty } from '@/services/firestore';
+import { getProperties, deleteProperty } from '@/services';
 import { Property } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import PropertyFormModal from '@/components/admin/PropertyFormModal';

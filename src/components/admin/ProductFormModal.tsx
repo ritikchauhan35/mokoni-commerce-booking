@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useForm } from 'react-hook-form';
 import { Product } from '@/types';
-import { addProduct, updateProduct } from '@/services/firestore';
+import { addProduct, updateProduct } from '@/services';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 

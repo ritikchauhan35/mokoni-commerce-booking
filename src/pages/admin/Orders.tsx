@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Search, Eye, Edit, Truck } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { getAllOrders } from '@/services/firestore';
+import { getAllOrders } from '@/services';
 import { Order } from '@/types';
 import OrderStatusModal from '@/components/admin/OrderStatusModal';
 

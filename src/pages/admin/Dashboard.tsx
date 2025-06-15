@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Users, Package, Building, ShoppingCart, Calendar, TrendingUp, DollarSign, Star } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { getAllUsers, getProducts, getProperties, getAllOrders, getAllBookings } from '@/services/firestore';
+import { getAllUsers, getProducts, getProperties, getAllOrders, getAllBookings } from '@/services';
 
 const AdminDashboard = () => {
   const { data: users = [] } = useQuery({
