@@ -1,12 +1,14 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Star, ShoppingCart } from 'lucide-react';
+import { Star, ShoppingCart, Eye } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
 import { useCart } from '@/hooks/useCart';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Product } from '@/types';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProductGridProps {
   limit?: number;
@@ -15,6 +17,7 @@ interface ProductGridProps {
 const ProductGrid = ({ limit }: ProductGridProps) => {
   const { data: products = [], isLoading, error } = useProducts();
   const { addItem } = useCart();
+  const { toast } = useToast();
 
   if (isLoading) {
     return (
@@ -56,6 +59,14 @@ const ProductGrid = ({ limit }: ProductGridProps) => {
     addItem(productId, 1);
   };
 
+  const handleBuyNow = (productId: string) => {
+    addItem(productId, 1);
+    toast({
+      title: "Added to cart",
+      description: "Redirecting to checkout...",
+    });
+  };
+
   // Apply limit if provided
   const displayedProducts = limit ? products.slice(0, limit) : products;
 
@@ -80,6 +91,15 @@ const ProductGrid = ({ limit }: ProductGridProps) => {
                   Out of Stock
                 </div>
               )}
+              <Link 
+                to={`/product/${product.id}`}
+                className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100"
+              >
+                <Button size="sm" className="bg-olive-600 hover:bg-olive-700">
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Details
+                </Button>
+              </Link>
             </div>
           </CardHeader>
           <CardContent className="p-4">
@@ -111,14 +131,24 @@ const ProductGrid = ({ limit }: ProductGridProps) => {
                 )}
               </div>
             </div>
-            <Button 
-              className="w-full bg-olive-600 hover:bg-olive-700 text-pearl-50 border-0"
-              onClick={() => handleAddToCart(product.id)}
-              disabled={!product.inStock}
-            >
-              <ShoppingCart className="mr-2 h-4 w-4" />
-              {product.inStock ? 'Add to Cart' : 'Out of Stock'}
-            </Button>
+            <div className="space-y-2">
+              <Button 
+                className="w-full bg-olive-600 hover:bg-olive-700 text-pearl-50 border-0"
+                onClick={() => handleBuyNow(product.id)}
+                disabled={!product.inStock}
+              >
+                {product.inStock ? 'Buy Now' : 'Out of Stock'}
+              </Button>
+              <Button 
+                variant="outline"
+                className="w-full border-olive-600 text-olive-600 hover:bg-olive-50"
+                onClick={() => handleAddToCart(product.id)}
+                disabled={!product.inStock}
+              >
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                Add to Cart
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ))}

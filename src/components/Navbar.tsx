@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, User, Search, Menu, X, LogOut } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -9,14 +9,24 @@ import { useCart } from '@/hooks/useCart';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { user, logout } = useAuth();
   const { getCartTotal } = useCart();
+  const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
       await logout();
     } catch (error) {
       console.error('Logout failed:', error);
+    }
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
     }
   };
 
@@ -48,13 +58,15 @@ const Navbar = () => {
 
           {/* Search Bar */}
           <div className="hidden md:flex items-center space-x-4 flex-1 max-w-md mx-8">
-            <div className="relative w-full">
+            <form onSubmit={handleSearch} className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-olive-500 h-4 w-4" />
               <Input 
                 placeholder="Search products & properties..." 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 bg-pearl-100 border-olive-200 text-olive-800 placeholder-olive-500 focus:border-olive-500 focus:ring-olive-500"
               />
-            </div>
+            </form>
           </div>
 
           {/* Right Side Actions */}
@@ -75,12 +87,16 @@ const Navbar = () => {
                 </Button>
               </Link>
             )}
-            <Button variant="ghost" size="sm" className="text-olive-700 hover:bg-olive-100 hover:text-olive-900 relative">
-              <ShoppingCart className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 bg-olive-600 text-pearl-50 text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {getCartTotal()}
-              </span>
-            </Button>
+            <Link to="/cart">
+              <Button variant="ghost" size="sm" className="text-olive-700 hover:bg-olive-100 hover:text-olive-900 relative">
+                <ShoppingCart className="h-5 w-5" />
+                {getCartTotal() > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-olive-600 text-pearl-50 text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {getCartTotal()}
+                  </span>
+                )}
+              </Button>
+            </Link>
             
             {/* Mobile Menu Button */}
             <Button 
@@ -98,13 +114,15 @@ const Navbar = () => {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-olive-200 bg-pearl-50">
             <div className="flex flex-col space-y-4">
-              <div className="relative mb-4">
+              <form onSubmit={handleSearch} className="relative mb-4">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-olive-500 h-4 w-4" />
                 <Input 
                   placeholder="Search..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 bg-pearl-100 border-olive-200 text-olive-800 placeholder-olive-500"
                 />
-              </div>
+              </form>
               <Link to="/products" className="text-olive-700 hover:text-olive-900 transition-colors py-2 font-medium">
                 Products
               </Link>
@@ -116,6 +134,9 @@ const Navbar = () => {
               </Link>
               <Link to="/contact" className="text-olive-700 hover:text-olive-900 transition-colors py-2 font-medium">
                 Contact
+              </Link>
+              <Link to="/cart" className="text-olive-700 hover:text-olive-900 transition-colors py-2 font-medium">
+                Cart ({getCartTotal()})
               </Link>
               {user ? (
                 <Button onClick={handleLogout} className="text-left bg-olive-600 hover:bg-olive-700 text-pearl-50">

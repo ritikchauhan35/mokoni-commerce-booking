@@ -1,8 +1,9 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Star, Calendar, Users } from 'lucide-react';
+import { Star, Calendar, Users, Eye } from 'lucide-react';
 import { useProperties } from '@/hooks/useProperties';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -66,6 +67,15 @@ const PropertyGrid = ({ limit }: PropertyGridProps) => {
               <div className="absolute top-2 right-2 bg-olive-800/80 text-pearl-50 px-2 py-1 rounded text-sm font-semibold">
                 ${property.price}/night
               </div>
+              <Link 
+                to={`/property/${property.id}`}
+                className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100"
+              >
+                <Button size="sm" className="bg-olive-600 hover:bg-olive-700">
+                  <Eye className="mr-2 h-4 w-4" />
+                  View Details
+                </Button>
+              </Link>
             </div>
           </CardHeader>
           <CardContent className="p-4">
@@ -95,10 +105,12 @@ const PropertyGrid = ({ limit }: PropertyGridProps) => {
               </div>
               <div>{property.bedrooms} bedrooms</div>
             </div>
-            <Button className="w-full bg-olive-600 hover:bg-olive-700 text-pearl-50 border-0">
-              <Calendar className="mr-2 h-4 w-4" />
-              Book Now
-            </Button>
+            <Link to={`/property/${property.id}`}>
+              <Button className="w-full bg-olive-600 hover:bg-olive-700 text-pearl-50 border-0">
+                <Calendar className="mr-2 h-4 w-4" />
+                Book Now
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       ))}
