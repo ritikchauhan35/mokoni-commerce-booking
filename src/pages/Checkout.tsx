@@ -87,6 +87,7 @@ const Checkout = () => {
 
   const checkoutItems = getCheckoutItems();
   
+  // Fix the subtotal calculation
   const subtotal = checkoutItems.reduce((total, item) => {
     return total + (item.product!.price * item.quantity);
   }, 0);
@@ -99,6 +100,16 @@ const Checkout = () => {
   const onSubmit = async (data: CheckoutFormData) => {
     setIsProcessing(true);
     try {
+      // Fix payment method mapping to match Order interface
+      let paymentMethodValue;
+      if (data.paymentMethod === 'cod') {
+        paymentMethodValue = 'cash_on_delivery';
+      } else if (data.paymentMethod === 'upi') {
+        paymentMethodValue = 'upi';
+      } else {
+        paymentMethodValue = 'card';
+      }
+
       const order = {
         userId: user?.uid || 'guest',
         items: checkoutItems.map(item => ({
@@ -120,11 +131,7 @@ const Checkout = () => {
           zipCode: data.zipCode,
           country: 'IN'
         },
-        paymentMethod: data.paymentMethod === 'cod' 
-          ? 'cash_on_delivery' 
-          : data.paymentMethod === 'upi' 
-            ? { type: 'upi', upiId: data.upiId } 
-            : { type: 'card', last4: data.cardNumber?.slice(-4) },
+        paymentMethod: paymentMethodValue,
         createdAt: new Date()
       };
 
