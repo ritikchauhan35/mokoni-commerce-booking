@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Star, ShoppingCart, Eye } from 'lucide-react';
@@ -18,6 +18,7 @@ const ProductGrid = ({ limit }: ProductGridProps) => {
   const { data: products = [], isLoading, error } = useProducts();
   const { addItem } = useCart();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -59,12 +60,8 @@ const ProductGrid = ({ limit }: ProductGridProps) => {
     addItem(productId, 1);
   };
 
-  const handleBuyNow = (productId: string) => {
-    addItem(productId, 1);
-    toast({
-      title: "Added to cart",
-      description: "Redirecting to checkout...",
-    });
+  const handleBuyNow = (product: Product) => {
+    navigate('/checkout', { state: { product } });
   };
 
   // Apply limit if provided
@@ -134,7 +131,7 @@ const ProductGrid = ({ limit }: ProductGridProps) => {
             <div className="space-y-2">
               <Button 
                 className="w-full bg-olive-600 hover:bg-olive-700 text-pearl-50 border-0"
-                onClick={() => handleBuyNow(product.id)}
+                onClick={() => handleBuyNow(product)}
                 disabled={!product.inStock}
               >
                 {product.inStock ? 'Buy Now' : 'Out of Stock'}

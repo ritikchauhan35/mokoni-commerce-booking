@@ -20,5 +20,8 @@ export * from './reviews';
 // User Management
 export * from './users';
 
+// Checkout
+export * from './checkout';
+
 // Real-time listeners
 export * from './realtime';

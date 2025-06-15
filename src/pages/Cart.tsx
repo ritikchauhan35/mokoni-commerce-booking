@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import Footer from '@/components/Footer';
 const Cart = () => {
   const { cartItems, updateQuantity, removeItem, getCartTotal } = useCart();
   const { data: products = [] } = useProducts();
+  const navigate = useNavigate();
 
   const getCartItemsWithProducts = () => {
     return cartItems.map(cartItem => {
@@ -30,6 +31,10 @@ const Cart = () => {
   const tax = subtotal * 0.1; // 10% tax
   const shipping = subtotal > 50 ? 0 : 9.99;
   const grandTotal = subtotal + tax + shipping;
+
+  const handleProceedToCheckout = () => {
+    navigate('/checkout');
+  };
 
   if (cartItems.length === 0) {
     return (
@@ -140,7 +145,10 @@ const Cart = () => {
                   <span className="text-olive-800">Total</span>
                   <span className="text-olive-800">${grandTotal.toFixed(2)}</span>
                 </div>
-                <Button className="w-full bg-olive-600 hover:bg-olive-700 py-3">
+                <Button 
+                  className="w-full bg-olive-600 hover:bg-olive-700 py-3"
+                  onClick={handleProceedToCheckout}
+                >
                   Proceed to Checkout
                 </Button>
                 <Link to="/products">
