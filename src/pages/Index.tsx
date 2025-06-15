@@ -3,77 +3,56 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShoppingCart, Calendar, Star, ArrowDown } from 'lucide-react';
+import { ShoppingCart, Calendar, Star } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import HeroCarousel from '@/components/HeroCarousel';
 import ProductGrid from '@/components/ProductGrid';
 import PropertyGrid from '@/components/PropertyGrid';
 import Footer from '@/components/Footer';
+import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 const Index = () => {
+  const { ref: featuresRef, isVisible: featuresVisible } = useScrollAnimation();
+  const { ref: productsRef, isVisible: productsVisible } = useScrollAnimation();
+  const { ref: propertiesRef, isVisible: propertiesVisible } = useScrollAnimation();
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+    <div className="min-h-screen bg-gradient-to-br from-pearl-50 to-olive-50">
       <Navbar />
       
-      {/* Hero Section */}
-      <section className="relative px-4 py-20 md:py-32">
-        <div className="max-w-7xl mx-auto text-center">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 blur-3xl rounded-full"></div>
-          <div className="relative z-10">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
-              Shop & Stay with
-              <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"> Mokoni</span>
-            </h1>
-            <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-              Discover amazing products and book stunning properties all in one place. 
-              Your gateway to shopping and hospitality experiences.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0">
-                <ShoppingCart className="mr-2 h-5 w-5" />
-                Shop Now
-              </Button>
-              <Button size="lg" variant="outline" className="border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white">
-                <Calendar className="mr-2 h-5 w-5" />
-                Book Property
-              </Button>
-            </div>
-          </div>
-        </div>
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white animate-bounce">
-          <ArrowDown className="h-6 w-6" />
-        </div>
-      </section>
+      {/* Hero Section with Carousel */}
+      <HeroCarousel />
 
       {/* Features Section */}
-      <section className="px-4 py-16 bg-black/20 backdrop-blur-sm">
+      <section ref={featuresRef} className="px-4 py-16 bg-pearl-100">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-white text-center mb-12">
+          <h2 className={`text-3xl md:text-4xl font-bold text-olive-800 text-center mb-12 transition-all duration-700 ${featuresVisible ? 'animate-fade-in' : 'opacity-0'}`}>
             Why Choose Mokoni?
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
-            <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 transition-all duration-300">
+            <Card className={`bg-pearl-50 border-olive-200 text-olive-800 hover:shadow-lg transition-all duration-500 ${featuresVisible ? 'animate-slide-in-left' : 'opacity-0'}`}>
               <CardHeader>
-                <ShoppingCart className="h-12 w-12 text-blue-400 mb-4" />
-                <CardTitle>Premium Shopping</CardTitle>
-                <CardDescription className="text-gray-300">
+                <ShoppingCart className="h-12 w-12 text-olive-600 mb-4" />
+                <CardTitle className="text-olive-800">Premium Shopping</CardTitle>
+                <CardDescription className="text-olive-600">
                   Curated selection of high-quality products with secure checkout and fast delivery.
                 </CardDescription>
               </CardHeader>
             </Card>
-            <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 transition-all duration-300">
+            <Card className={`bg-pearl-50 border-olive-200 text-olive-800 hover:shadow-lg transition-all duration-500 delay-200 ${featuresVisible ? 'animate-scale-in' : 'opacity-0'}`}>
               <CardHeader>
-                <Calendar className="h-12 w-12 text-purple-400 mb-4" />
-                <CardTitle>Easy Booking</CardTitle>
-                <CardDescription className="text-gray-300">
+                <Calendar className="h-12 w-12 text-olive-600 mb-4" />
+                <CardTitle className="text-olive-800">Easy Booking</CardTitle>
+                <CardDescription className="text-olive-600">
                   Book stunning properties with instant confirmation and flexible cancellation.
                 </CardDescription>
               </CardHeader>
             </Card>
-            <Card className="bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 transition-all duration-300">
+            <Card className={`bg-pearl-50 border-olive-200 text-olive-800 hover:shadow-lg transition-all duration-500 delay-400 ${featuresVisible ? 'animate-slide-in-right' : 'opacity-0'}`}>
               <CardHeader>
-                <Star className="h-12 w-12 text-yellow-400 mb-4" />
-                <CardTitle>Trusted Reviews</CardTitle>
-                <CardDescription className="text-gray-300">
+                <Star className="h-12 w-12 text-olive-600 mb-4" />
+                <CardTitle className="text-olive-800">Trusted Reviews</CardTitle>
+                <CardDescription className="text-olive-600">
                   Real reviews from verified customers to help you make the best choices.
                 </CardDescription>
               </CardHeader>
@@ -83,33 +62,41 @@ const Index = () => {
       </section>
 
       {/* Featured Products */}
-      <section className="px-4 py-16">
+      <section ref={productsRef} className="px-4 py-16">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Featured Products</h2>
-            <p className="text-gray-300 text-lg">Discover our most popular items</p>
+          <div className={`text-center mb-12 transition-all duration-700 ${productsVisible ? 'animate-fade-in' : 'opacity-0'}`}>
+            <h2 className="text-3xl md:text-4xl font-bold text-olive-800 mb-4">Featured Products</h2>
+            <p className="text-olive-600 text-lg">Discover our most popular items</p>
           </div>
-          <ProductGrid />
-          <div className="text-center mt-8">
-            <Button variant="outline" size="lg" className="border-blue-400 text-blue-400 hover:bg-blue-400 hover:text-white">
-              View All Products
-            </Button>
+          <div className={`transition-all duration-700 delay-300 ${productsVisible ? 'animate-slide-up' : 'opacity-0'}`}>
+            <ProductGrid />
+          </div>
+          <div className={`text-center mt-8 transition-all duration-700 delay-500 ${productsVisible ? 'animate-fade-in' : 'opacity-0'}`}>
+            <Link to="/products">
+              <Button variant="outline" size="lg" className="border-olive-500 text-olive-700 hover:bg-olive-500 hover:text-pearl-50 font-medium">
+                View All Products
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
 
       {/* Featured Properties */}
-      <section className="px-4 py-16 bg-black/20 backdrop-blur-sm">
+      <section ref={propertiesRef} className="px-4 py-16 bg-pearl-100">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Featured Properties</h2>
-            <p className="text-gray-300 text-lg">Book your perfect getaway</p>
+          <div className={`text-center mb-12 transition-all duration-700 ${propertiesVisible ? 'animate-fade-in' : 'opacity-0'}`}>
+            <h2 className="text-3xl md:text-4xl font-bold text-olive-800 mb-4">Featured Properties</h2>
+            <p className="text-olive-600 text-lg">Book your perfect getaway</p>
           </div>
-          <PropertyGrid />
-          <div className="text-center mt-8">
-            <Button variant="outline" size="lg" className="border-purple-400 text-purple-400 hover:bg-purple-400 hover:text-white">
-              View All Properties
-            </Button>
+          <div className={`transition-all duration-700 delay-300 ${propertiesVisible ? 'animate-slide-up' : 'opacity-0'}`}>
+            <PropertyGrid />
+          </div>
+          <div className={`text-center mt-8 transition-all duration-700 delay-500 ${propertiesVisible ? 'animate-fade-in' : 'opacity-0'}`}>
+            <Link to="/properties">
+              <Button variant="outline" size="lg" className="border-olive-500 text-olive-700 hover:bg-olive-500 hover:text-pearl-50 font-medium">
+                View All Properties
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

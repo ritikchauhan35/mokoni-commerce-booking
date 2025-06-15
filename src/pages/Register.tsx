@@ -4,7 +4,7 @@ import RegisterForm from '@/components/auth/RegisterForm';
 
 const Register = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-pearl-50 via-olive-50 to-pearl-100 flex items-center justify-center p-4">
       <RegisterForm />
     </div>
   );
