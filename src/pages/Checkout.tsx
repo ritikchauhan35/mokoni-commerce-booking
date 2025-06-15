@@ -126,6 +126,9 @@ const Checkout = () => {
         paymentMethodValue = 'card';
       }
 
+      // Fix payment status typing
+      const paymentStatusValue: 'pending' | 'paid' | 'failed' | 'refunded' = 'pending';
+
       const order = {
         userId: user?.uid || 'guest',
         items: checkoutItems.map(item => ({
@@ -139,7 +142,7 @@ const Checkout = () => {
         tax: gst,
         shipping,
         status: 'pending' as const,
-        paymentStatus: data.paymentMethod === 'cod' ? 'pending' : 'pending',
+        paymentStatus: paymentStatusValue,
         shippingAddress: {
           street: data.address,
           city: data.city,
