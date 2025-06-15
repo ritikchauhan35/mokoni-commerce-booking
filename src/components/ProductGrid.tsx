@@ -15,7 +15,7 @@ const ProductGrid = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {Array.from({ length: 8 }).map((_, i) => (
-          <Card key={i} className="bg-white/10 backdrop-blur-md border-white/20">
+          <Card key={i} className="bg-pearl-100 border-olive-200 shadow-lg">
             <CardHeader className="p-0">
               <Skeleton className="w-full h-48 rounded-t-lg" />
             </CardHeader>
@@ -34,7 +34,7 @@ const ProductGrid = () => {
   if (error) {
     return (
       <div className="text-center py-8">
-        <p className="text-red-400">Error loading products. Please try again later.</p>
+        <p className="text-red-600">Error loading products. Please try again later.</p>
       </div>
     );
   }
@@ -42,7 +42,7 @@ const ProductGrid = () => {
   if (!products || products.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-300">No products available at the moment.</p>
+        <p className="text-olive-700">No products available at the moment.</p>
       </div>
     );
   }
@@ -54,7 +54,7 @@ const ProductGrid = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {products.map((product) => (
-        <Card key={product.id} className="bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 transition-all duration-300 group">
+        <Card key={product.id} className="bg-pearl-50 border-olive-200 hover:bg-pearl-100 transition-all duration-300 group shadow-lg hover:shadow-xl">
           <CardHeader className="p-0">
             <div className="relative overflow-hidden rounded-t-lg">
               <img 
@@ -75,7 +75,7 @@ const ProductGrid = () => {
             </div>
           </CardHeader>
           <CardContent className="p-4">
-            <h3 className="text-white font-semibold mb-2 line-clamp-2">{product.name}</h3>
+            <h3 className="text-olive-800 font-semibold mb-2 line-clamp-2">{product.name}</h3>
             <div className="flex items-center mb-2">
               <div className="flex items-center">
                 {[...Array(5)].map((_, i) => (
@@ -83,24 +83,24 @@ const ProductGrid = () => {
                     key={i}
                     className={`h-4 w-4 ${
                       i < Math.floor(product.rating)
-                        ? 'text-yellow-400 fill-current'
+                        ? 'text-yellow-500 fill-current'
                         : 'text-gray-400'
                     }`}
                   />
                 ))}
               </div>
-              <span className="text-gray-300 text-sm ml-2">({product.reviews})</span>
+              <span className="text-olive-600 text-sm ml-2">({product.reviews})</span>
             </div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
-                <span className="text-white font-bold text-lg">${product.price.toFixed(2)}</span>
+                <span className="text-olive-800 font-bold text-lg">${product.price.toFixed(2)}</span>
                 {product.originalPrice && (
-                  <span className="text-gray-400 line-through text-sm">${product.originalPrice.toFixed(2)}</span>
+                  <span className="text-gray-500 line-through text-sm">${product.originalPrice.toFixed(2)}</span>
                 )}
               </div>
             </div>
             <Button 
-              className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white border-0"
+              className="w-full bg-olive-600 hover:bg-olive-700 text-pearl-50 border-0"
               onClick={() => handleAddToCart(product.id)}
               disabled={!product.inStock}
             >
