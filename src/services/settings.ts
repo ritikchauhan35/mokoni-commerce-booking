@@ -1,8 +1,17 @@
 
+import { 
+  doc, 
+  getDoc, 
+  setDoc, 
+  serverTimestamp 
+} from 'firebase/firestore';
+import { db } from '@/config/firebase';
 import { SiteSettings } from '@/types';
 
+const SETTINGS_DOC_ID = 'site-settings';
+
 const defaultSettings: SiteSettings = {
-  id: 'site-settings-1',
+  id: SETTINGS_DOC_ID,
   siteName: 'Mokoni',
   siteDescription: 'Your trusted marketplace for premium products and unique experiences',
   contactEmail: 'info@mokoni.com',
@@ -49,35 +58,78 @@ const defaultSettings: SiteSettings = {
 };
 
 export const getSettings = async (): Promise<SiteSettings> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 300));
-  
-  const saved = localStorage.getItem('mokoni-settings');
-  if (saved) {
-    return JSON.parse(saved);
+  try {
+    const settingsDoc = await getDoc(doc(db, 'settings', SETTINGS_DOC_ID));
+    
+    if (settingsDoc.exists()) {
+      const data = settingsDoc.data();
+      return {
+        ...data,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date()
+      } as SiteSettings;
+    } else {
+      // Create default settings in Firebase
+      await setDoc(doc(db, 'settings', SETTINGS_DOC_ID), {
+        ...defaultSettings,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+      return defaultSettings;
+    }
+  } catch (error) {
+    console.error('Error fetching settings:', error);
+    // Fallback to localStorage if Firebase fails
+    const saved = localStorage.getItem('mokoni-settings');
+    if (saved) {
+      return JSON.parse(saved);
+    }
+    return defaultSettings;
   }
-  
-  // Save default settings
-  localStorage.setItem('mokoni-settings', JSON.stringify(defaultSettings));
-  return defaultSettings;
 };
 
 export const updateSettings = async (settings: Partial<SiteSettings>): Promise<SiteSettings> => {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  const current = await getSettings();
-  const updated = {
-    ...current,
-    ...settings,
-    updatedAt: new Date()
-  };
-  
-  localStorage.setItem('mokoni-settings', JSON.stringify(updated));
-  return updated;
+  try {
+    const current = await getSettings();
+    const updated = {
+      ...current,
+      ...settings,
+      updatedAt: new Date()
+    };
+    
+    // Update in Firebase
+    await setDoc(doc(db, 'settings', SETTINGS_DOC_ID), {
+      ...updated,
+      updatedAt: serverTimestamp()
+    });
+    
+    // Also update localStorage as backup
+    localStorage.setItem('mokoni-settings', JSON.stringify(updated));
+    
+    return updated;
+  } catch (error) {
+    console.error('Error updating settings:', error);
+    throw error;
+  }
 };
 
 export const resetSettings = async (): Promise<SiteSettings> => {
-  localStorage.removeItem('mokoni-settings');
-  return defaultSettings;
+  try {
+    await setDoc(doc(db, 'settings', SETTINGS_DOC_ID), {
+      ...defaultSettings,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    
+    localStorage.removeItem('mokoni-settings');
+    return defaultSettings;
+  } catch (error) {
+    console.error('Error resetting settings:', error);
+    throw error;
+  }
+};
+
+// Hook for getting settings in components
+export const useSettings = () => {
+  return { getSettings, updateSettings, resetSettings };
 };
