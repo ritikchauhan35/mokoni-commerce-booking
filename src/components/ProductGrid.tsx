@@ -8,14 +8,18 @@ import { useCart } from '@/hooks/useCart';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Product } from '@/types';
 
-const ProductGrid = () => {
+interface ProductGridProps {
+  limit?: number;
+}
+
+const ProductGrid = ({ limit }: ProductGridProps) => {
   const { data: products = [], isLoading, error } = useProducts();
   const { addItem } = useCart();
 
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {Array.from({ length: 8 }).map((_, i) => (
+        {Array.from({ length: limit || 8 }).map((_, i) => (
           <Card key={i} className="bg-pearl-100 border-olive-200 shadow-lg">
             <CardHeader className="p-0">
               <Skeleton className="w-full h-48 rounded-t-lg" />
@@ -52,9 +56,12 @@ const ProductGrid = () => {
     addItem(productId, 1);
   };
 
+  // Apply limit if provided
+  const displayedProducts = limit ? products.slice(0, limit) : products;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {products.map((product: Product) => (
+      {displayedProducts.map((product: Product) => (
         <Card key={product.id} className="bg-pearl-50 border-olive-200 hover:bg-pearl-100 transition-all duration-300 group shadow-lg hover:shadow-xl">
           <CardHeader className="p-0">
             <div className="relative overflow-hidden rounded-t-lg">

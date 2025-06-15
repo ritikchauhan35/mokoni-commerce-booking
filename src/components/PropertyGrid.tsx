@@ -6,13 +6,17 @@ import { Star, Calendar, Users } from 'lucide-react';
 import { useProperties } from '@/hooks/useProperties';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const PropertyGrid = () => {
+interface PropertyGridProps {
+  limit?: number;
+}
+
+const PropertyGrid = ({ limit }: PropertyGridProps) => {
   const { data: properties, isLoading, error } = useProperties();
 
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {Array.from({ length: limit || 6 }).map((_, i) => (
           <Card key={i} className="bg-pearl-100 border-olive-200 shadow-lg">
             <CardHeader className="p-0">
               <Skeleton className="w-full h-48 rounded-t-lg" />
@@ -45,9 +49,12 @@ const PropertyGrid = () => {
     );
   }
 
+  // Apply limit if provided
+  const displayedProperties = limit ? properties.slice(0, limit) : properties;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {properties.map((property) => (
+      {displayedProperties.map((property) => (
         <Card key={property.id} className="bg-pearl-50 border-olive-200 hover:bg-pearl-100 transition-all duration-300 group shadow-lg hover:shadow-xl">
           <CardHeader className="p-0">
             <div className="relative overflow-hidden rounded-t-lg">
