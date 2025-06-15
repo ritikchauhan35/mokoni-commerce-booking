@@ -1,11 +1,26 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { 
+  onAuthStateChanged, 
+  signOut, 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  User as FirebaseUser
+} from 'firebase/auth';
 import { auth } from '@/config/firebase';
 import { createUserProfile, getUserProfile } from '@/services';
 import { User } from '@/types';
 
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  role: 'user' | 'admin' | 'super_admin';
+  createdAt: Date;
+}
+
 interface AuthContextType {
-  user: User | null;
+  user: FirebaseUser | null;
   userProfile: UserProfile | null;
   loading: boolean;
   isAdmin: boolean;
@@ -30,35 +45,35 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log('Auth state changed:', user?.uid);
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log('Auth state changed:', firebaseUser?.uid);
+      setUser(firebaseUser);
       
-      if (user) {
+      if (firebaseUser) {
         try {
-          console.log('Fetching user profile for:', user.uid);
+          console.log('Fetching user profile for:', firebaseUser.uid);
           // Try to get existing user profile
-          let profile = await getUserProfile(user.uid);
+          let profile = await getUserProfile(firebaseUser.uid);
           console.log('Existing profile:', profile);
           
           // If no profile exists, create one with default user role
           if (!profile) {
             console.log('No profile found, creating new profile');
             const newUserData: Omit<UserProfile, 'id'> = {
-              name: user.displayName || '',
-              email: user.email || '',
+              name: firebaseUser.displayName || '',
+              email: firebaseUser.email || '',
               role: 'user',
               createdAt: new Date(),
             };
             
-            await createUserProfile(user.uid, newUserData);
+            await createUserProfile(firebaseUser.uid, newUserData);
             console.log('Profile created, fetching again');
-            profile = await getUserProfile(user.uid);
+            profile = await getUserProfile(firebaseUser.uid);
             console.log('New profile:', profile);
           }
           
