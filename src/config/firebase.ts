@@ -5,13 +5,13 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
-  // These values need to be provided by the user from their Firebase project
-  apiKey: "your-api-key",
-  authDomain: "your-project.firebaseapp.com",
-  projectId: "your-project-id",
-  storageBucket: "your-project.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "your-app-id"
+  apiKey: "AIzaSyCEQd-JMB8yadbVHRsD8tzEsOkEpZoW4_o",
+  authDomain: "mokoni-60253.firebaseapp.com",
+  projectId: "mokoni-60253",
+  storageBucket: "mokoni-60253.firebasestorage.app",
+  messagingSenderId: "477891201995",
+  appId: "1:477891201995:web:825377c050eb07f13d044e",
+  measurementId: "G-KBE5MYFBY4"
 };
 
 const app = initializeApp(firebaseConfig);
