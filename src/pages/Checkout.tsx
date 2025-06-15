@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { ShoppingBag, CreditCard, Truck, Wallet, Banknote } from 'lucide-react';
+import { Product } from '@/types';
 
 interface CheckoutFormData {
   email: string;
@@ -33,6 +34,13 @@ interface CheckoutFormData {
   cvv?: string;
   cardName?: string;
   upiId?: string;
+}
+
+interface CheckoutItem {
+  id: string;
+  productId: string;
+  quantity: number;
+  product: Product;
 }
 
 const Checkout = () => {
@@ -69,27 +77,35 @@ const Checkout = () => {
 
   const paymentMethod = watch('paymentMethod');
 
-  const getCheckoutItems = () => {
+  const getCheckoutItems = (): CheckoutItem[] => {
     if (isDirectPurchase) {
       return [{ 
+        id: 'temp-' + checkoutItem.id,
         productId: checkoutItem.id, 
         quantity: 1, 
-        product: checkoutItem,
-        id: 'temp-' + checkoutItem.id 
+        product: checkoutItem
       }];
     }
     
-    return cartItems.map(cartItem => {
-      const product = products.find(p => p.id === cartItem.productId);
-      return { ...cartItem, product };
-    }).filter(item => item.product);
+    return cartItems
+      .map(cartItem => {
+        const product = products.find(p => p.id === cartItem.productId);
+        if (!product) return null;
+        return { 
+          id: cartItem.id,
+          productId: cartItem.productId,
+          quantity: cartItem.quantity,
+          product 
+        };
+      })
+      .filter((item): item is CheckoutItem => item !== null);
   };
 
   const checkoutItems = getCheckoutItems();
   
-  // Calculate subtotal correctly - fix the reduce function with proper initial value
-  const subtotal = checkoutItems.reduce((total: number, item) => {
-    return total + (item.product!.price * item.quantity);
+  // Calculate subtotal with proper typing
+  const subtotal = checkoutItems.reduce((total: number, item: CheckoutItem) => {
+    return total + (item.product.price * item.quantity);
   }, 0);
 
   const gst = subtotal * 0.18; // 18% GST for India
@@ -115,8 +131,8 @@ const Checkout = () => {
         items: checkoutItems.map(item => ({
           productId: item.productId,
           quantity: item.quantity,
-          price: item.product!.price,
-          name: item.product!.name
+          price: item.product.price,
+          name: item.product.name
         })),
         total,
         subtotal,
@@ -398,16 +414,16 @@ const Checkout = () => {
                   {checkoutItems.map((item) => (
                     <div key={item.id} className="flex items-center space-x-3">
                       <img 
-                        src={item.product!.images[0] || "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=100&h=100&fit=crop"} 
-                        alt={item.product!.name}
+                        src={item.product.images[0] || "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=100&h=100&fit=crop"} 
+                        alt={item.product.name}
                         className="w-12 h-12 object-cover rounded"
                       />
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-olive-800">{item.product!.name}</p>
+                        <p className="text-sm font-medium text-olive-800">{item.product.name}</p>
                         <p className="text-xs text-olive-600">Qty: {item.quantity}</p>
                       </div>
                       <p className="text-sm font-bold text-olive-800">
-                        ₹{(item.product!.price * item.quantity).toFixed(2)}
+                        ₹{(item.product.price * item.quantity).toFixed(2)}
                       </p>
                     </div>
                   ))}
