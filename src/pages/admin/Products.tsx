@@ -6,11 +6,25 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Search, Plus, Edit, Trash2, Eye } from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { getProducts } from '@/services/firestore';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getProducts, deleteProduct } from '@/services/firestore';
+import { Product } from '@/types';
+import { useToast } from '@/hooks/use-toast';
+import ProductFormModal from '@/components/admin/ProductFormModal';
+import ProductDetailModal from '@/components/admin/ProductDetailModal';
+import DeleteConfirmModal from '@/components/admin/DeleteConfirmModal';
 
 const AdminProducts = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: products = [], isLoading } = useQuery({
     queryKey: ['admin-products'],
@@ -22,11 +36,65 @@ const AdminProducts = () => {
     product.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleAddProduct = () => {
+    setFormMode('create');
+    setSelectedProduct(null);
+    setIsFormModalOpen(true);
+  };
+
+  const handleEditProduct = (product: Product) => {
+    setFormMode('edit');
+    setSelectedProduct(product);
+    setIsFormModalOpen(true);
+  };
+
+  const handleViewProduct = (product: Product) => {
+    setSelectedProduct(product);
+    setIsDetailModalOpen(true);
+  };
+
+  const handleDeleteProduct = (product: Product) => {
+    setSelectedProduct(product);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedProduct) return;
+
+    setDeleteLoading(true);
+    try {
+      await deleteProduct(selectedProduct.id);
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      toast({
+        title: "Success",
+        description: "Product deleted successfully",
+      });
+      setIsDeleteModalOpen(false);
+      setSelectedProduct(null);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete product",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-olive-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-olive-800">Product Management</h1>
-        <Button className="bg-olive-600 hover:bg-olive-700">
+        <Button onClick={handleAddProduct} className="bg-olive-600 hover:bg-olive-700">
           <Plus className="mr-2 h-4 w-4" />
           Add Product
         </Button>
@@ -83,13 +151,27 @@ const AdminProducts = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
-                      <Button size="sm" variant="outline" className="border-olive-300">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="border-olive-300"
+                        onClick={() => handleViewProduct(product)}
+                      >
                         <Eye className="h-3 w-3" />
                       </Button>
-                      <Button size="sm" variant="outline" className="border-olive-300">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="border-olive-300"
+                        onClick={() => handleEditProduct(product)}
+                      >
                         <Edit className="h-3 w-3" />
                       </Button>
-                      <Button size="sm" variant="destructive">
+                      <Button 
+                        size="sm" 
+                        variant="destructive"
+                        onClick={() => handleDeleteProduct(product)}
+                      >
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
@@ -100,6 +182,28 @@ const AdminProducts = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <ProductFormModal
+        isOpen={isFormModalOpen}
+        onClose={() => setIsFormModalOpen(false)}
+        product={selectedProduct}
+        mode={formMode}
+      />
+
+      <ProductDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        product={selectedProduct}
+      />
+
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Product"
+        description={`Are you sure you want to delete "${selectedProduct?.name}"? This action cannot be undone.`}
+        isLoading={deleteLoading}
+      />
     </div>
   );
 };

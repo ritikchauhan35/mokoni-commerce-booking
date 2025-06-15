@@ -8,9 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Eye, Edit, Calendar } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getAllBookings } from '@/services/firestore';
+import { Booking } from '@/types';
+import BookingStatusModal from '@/components/admin/BookingStatusModal';
 
 const AdminBookings = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
 
   const { data: bookings = [], isLoading } = useQuery({
     queryKey: ['admin-bookings'],
@@ -31,6 +35,19 @@ const AdminBookings = () => {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  const handleUpdateStatus = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setIsStatusModalOpen(true);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-olive-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -104,7 +121,12 @@ const AdminBookings = () => {
                       <Button size="sm" variant="outline" className="border-olive-300">
                         <Eye className="h-3 w-3" />
                       </Button>
-                      <Button size="sm" variant="outline" className="border-olive-300">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="border-olive-300"
+                        onClick={() => handleUpdateStatus(booking)}
+                      >
                         <Edit className="h-3 w-3" />
                       </Button>
                       <Button size="sm" variant="outline" className="border-olive-300">
@@ -118,6 +140,12 @@ const AdminBookings = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <BookingStatusModal
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        booking={selectedBooking}
+      />
     </div>
   );
 };

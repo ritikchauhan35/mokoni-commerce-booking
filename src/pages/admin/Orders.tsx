@@ -8,9 +8,13 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Eye, Edit, Truck } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getAllOrders } from '@/services/firestore';
+import { Order } from '@/types';
+import OrderStatusModal from '@/components/admin/OrderStatusModal';
 
 const AdminOrders = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['admin-orders'],
@@ -33,6 +37,19 @@ const AdminOrders = () => {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  const handleUpdateStatus = (order: Order) => {
+    setSelectedOrder(order);
+    setIsStatusModalOpen(true);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-olive-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -101,7 +118,12 @@ const AdminOrders = () => {
                       <Button size="sm" variant="outline" className="border-olive-300">
                         <Eye className="h-3 w-3" />
                       </Button>
-                      <Button size="sm" variant="outline" className="border-olive-300">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="border-olive-300"
+                        onClick={() => handleUpdateStatus(order)}
+                      >
                         <Edit className="h-3 w-3" />
                       </Button>
                       <Button size="sm" variant="outline" className="border-olive-300">
@@ -115,6 +137,12 @@ const AdminOrders = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <OrderStatusModal
+        isOpen={isStatusModalOpen}
+        onClose={() => setIsStatusModalOpen(false)}
+        order={selectedOrder}
+      />
     </div>
   );
 };
