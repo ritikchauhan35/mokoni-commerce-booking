@@ -176,7 +176,7 @@ export const getTopProperties = async (): Promise<{ name: string; bookings: numb
       const property = properties.find(p => p.id === booking.propertyId);
       if (property) {
         if (!propertyStats[booking.propertyId]) {
-          propertyStats[booking.propertyId] = { bookings: 0, revenue: 0, name: property.title };
+          propertyStats[booking.propertyId] = { bookings: 0, revenue: 0, name: property.name };
         }
         propertyStats[booking.propertyId].bookings += 1;
         propertyStats[booking.propertyId].revenue += booking.total;
