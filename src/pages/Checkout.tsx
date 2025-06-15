@@ -87,8 +87,8 @@ const Checkout = () => {
 
   const checkoutItems = getCheckoutItems();
   
-  // Fix the subtotal calculation
-  const subtotal = checkoutItems.reduce((total, item) => {
+  // Calculate subtotal correctly
+  const subtotal = checkoutItems.reduce((total: number, item) => {
     return total + (item.product!.price * item.quantity);
   }, 0);
 
@@ -101,7 +101,7 @@ const Checkout = () => {
     setIsProcessing(true);
     try {
       // Fix payment method mapping to match Order interface
-      let paymentMethodValue;
+      let paymentMethodValue: 'cash_on_delivery' | 'card' | 'paypal' | 'upi';
       if (data.paymentMethod === 'cod') {
         paymentMethodValue = 'cash_on_delivery';
       } else if (data.paymentMethod === 'upi') {
