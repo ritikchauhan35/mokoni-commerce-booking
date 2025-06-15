@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +27,11 @@ interface SettingsFormData {
   linkedin: string;
   taxRate: number;
   maintenanceMode: boolean;
+  // Notification settings
+  emailEnabled: boolean;
+  whatsappEnabled: boolean;
+  adminEmail: string;
+  adminWhatsapp: string;
 }
 
 const AdminSettings = () => {
@@ -57,6 +61,12 @@ const AdminSettings = () => {
       setValue('linkedin', settings.socialLinks?.linkedin || '');
       setValue('taxRate', settings.taxRate);
       setValue('maintenanceMode', settings.maintenanceMode);
+      
+      // Add notification settings
+      setValue('emailEnabled', settings.notifications?.emailEnabled || false);
+      setValue('whatsappEnabled', settings.notifications?.whatsappEnabled || false);
+      setValue('adminEmail', settings.notifications?.adminEmail || '');
+      setValue('adminWhatsapp', settings.notifications?.adminWhatsapp || '');
     }
   }, [settings, setValue]);
 
@@ -82,7 +92,16 @@ const AdminSettings = () => {
           linkedin: data.linkedin
         },
         taxRate: data.taxRate,
-        maintenanceMode: data.maintenanceMode
+        maintenanceMode: data.maintenanceMode,
+        notifications: {
+          emailEnabled: data.emailEnabled,
+          whatsappEnabled: data.whatsappEnabled,
+          adminEmail: data.adminEmail,
+          adminWhatsapp: data.adminWhatsapp,
+          twilioAccountSid: '',
+          twilioAuthToken: '',
+          twilioWhatsappNumber: ''
+        }
       });
 
       queryClient.invalidateQueries({ queryKey: ['settings'] });
@@ -289,6 +308,55 @@ const AdminSettings = () => {
                   {...register('linkedin')}
                   placeholder="https://linkedin.com/company/yourcompany"
                 />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Notification Settings */}
+        <Card className="bg-pearl-50 border-olive-200">
+          <CardHeader>
+            <CardTitle className="text-olive-800 flex items-center">
+              <Mail className="mr-2 h-5 w-5" />
+              Notification Settings
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="emailEnabled"
+                    {...register('emailEnabled')}
+                  />
+                  <Label htmlFor="emailEnabled">Enable Email Notifications</Label>
+                </div>
+                <div>
+                  <Label htmlFor="adminEmail">Admin Email for Notifications</Label>
+                  <Input
+                    id="adminEmail"
+                    type="email"
+                    {...register('adminEmail')}
+                    placeholder="admin@yoursite.com"
+                  />
+                </div>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="whatsappEnabled"
+                    {...register('whatsappEnabled')}
+                  />
+                  <Label htmlFor="whatsappEnabled">Enable WhatsApp Notifications</Label>
+                </div>
+                <div>
+                  <Label htmlFor="adminWhatsapp">Admin WhatsApp Number</Label>
+                  <Input
+                    id="adminWhatsapp"
+                    {...register('adminWhatsapp')}
+                    placeholder="+1234567890"
+                  />
+                </div>
               </div>
             </div>
           </CardContent>

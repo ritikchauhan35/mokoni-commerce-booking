@@ -7,10 +7,11 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { SiteSettings } from '@/types';
+import { NotificationConfig } from '@/types/notifications';
 
 const SETTINGS_DOC_ID = 'site-settings';
 
-const defaultSettings: SiteSettings = {
+const defaultSettings: SiteSettings & { notifications: NotificationConfig } = {
   id: SETTINGS_DOC_ID,
   siteName: 'Mokoni',
   siteDescription: 'Your trusted marketplace for premium products and unique experiences',
@@ -53,6 +54,15 @@ const defaultSettings: SiteSettings = {
   taxRate: 8.25,
   currency: 'USD',
   maintenanceMode: false,
+  notifications: {
+    emailEnabled: true,
+    whatsappEnabled: false,
+    adminEmail: 'admin@mokoni.com',
+    adminWhatsapp: '',
+    twilioAccountSid: '',
+    twilioAuthToken: '',
+    twilioWhatsappNumber: ''
+  },
   createdAt: new Date(),
   updatedAt: new Date()
 };

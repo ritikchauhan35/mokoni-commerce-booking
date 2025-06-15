@@ -1,4 +1,3 @@
-
 import { 
   collection, 
   doc, 
@@ -12,12 +11,36 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { Order } from '@/types';
+import { sendOrderNotification, sendOrderStatusNotification } from './notifications';
+import { getSettings } from './settings';
 
 export const createOrder = async (order: Omit<Order, 'id'>) => {
-  return await addDoc(collection(db, 'orders'), {
+  const orderRef = await addDoc(collection(db, 'orders'), {
     ...order,
     createdAt: serverTimestamp()
   });
+
+  // Send notification to admin
+  try {
+    const settings = await getSettings();
+    if (settings.notifications) {
+      await sendOrderNotification({
+        orderId: orderRef.id,
+        customerName: order.userId, // In real app, you'd get actual customer name
+        total: order.total,
+        status: order.status,
+        items: order.items.map(item => ({
+          name: item.productId, // In real app, you'd get actual product name
+          quantity: item.quantity,
+          price: item.price
+        }))
+      }, settings.notifications);
+    }
+  } catch (error) {
+    console.error('Failed to send order notification:', error);
+  }
+
+  return orderRef;
 };
 
 export const getUserOrders = async (userId: string): Promise<Order[]> => {
@@ -35,5 +58,15 @@ export const getAllOrders = async (): Promise<Order[]> => {
 };
 
 export const updateOrderStatus = async (orderId: string, status: Order['status']) => {
-  return await updateDoc(doc(db, 'orders', orderId), { status });
+  await updateDoc(doc(db, 'orders', orderId), { status });
+
+  // Send status update notification
+  try {
+    const settings = await getSettings();
+    if (settings.notifications) {
+      await sendOrderStatusNotification(orderId, status, '', settings.notifications);
+    }
+  } catch (error) {
+    console.error('Failed to send status update notification:', error);
+  }
 };

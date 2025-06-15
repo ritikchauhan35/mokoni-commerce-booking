@@ -1,11 +1,10 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Eye, Upload } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getProducts, deleteProduct } from '@/services';
 import { Product } from '@/types';
@@ -13,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import ProductFormModal from '@/components/admin/ProductFormModal';
 import ProductDetailModal from '@/components/admin/ProductDetailModal';
 import DeleteConfirmModal from '@/components/admin/DeleteConfirmModal';
+import CSVImportModal from '@/components/admin/CSVImportModal';
 
 const AdminProducts = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,6 +22,7 @@ const AdminProducts = () => {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [isCSVImportOpen, setIsCSVImportOpen] = useState(false);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -94,10 +95,19 @@ const AdminProducts = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-olive-800">Product Management</h1>
-        <Button onClick={handleAddProduct} className="bg-olive-600 hover:bg-olive-700">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Product
-        </Button>
+        <div className="flex space-x-2">
+          <Button 
+            onClick={() => setIsCSVImportOpen(true)}
+            variant="outline" 
+            className="border-olive-300"
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            Import CSV
+          </Button>
+          <Button onClick={() => setIsFormModalOpen(true)} className="bg-olive-600 hover:bg-olive-700">
+            Add Product
+          </Button>
+        </div>
       </div>
 
       <Card className="bg-pearl-50 border-olive-200">
@@ -203,6 +213,11 @@ const AdminProducts = () => {
         title="Delete Product"
         description={`Are you sure you want to delete "${selectedProduct?.name}"? This action cannot be undone.`}
         isLoading={deleteLoading}
+      />
+
+      <CSVImportModal
+        isOpen={isCSVImportOpen}
+        onClose={() => setIsCSVImportOpen(false)}
       />
     </div>
   );

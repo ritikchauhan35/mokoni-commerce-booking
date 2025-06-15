@@ -2,16 +2,22 @@
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import WhatsAppChat from '@/components/WhatsAppChat';
+import ContactFormHandler from '@/components/ContactFormHandler';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail, Phone, MapPin } from 'lucide-react';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { useQuery } from '@tanstack/react-query';
+import { getSettings } from '@/services/settings';
 
 const Contact = () => {
   const { ref: heroRef, isVisible: heroVisible } = useScrollAnimation();
   const { ref: formRef, isVisible: formVisible } = useScrollAnimation();
+
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: getSettings,
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pearl-50 to-olive-50">
@@ -40,21 +46,26 @@ const Contact = () => {
                 <Mail className="h-6 w-6 text-olive-600" />
                 <div>
                   <p className="font-medium text-olive-800">Email</p>
-                  <p className="text-olive-600">contact@mokoni.com</p>
+                  <p className="text-olive-600">{settings?.contactEmail || 'contact@mokoni.com'}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
                 <Phone className="h-6 w-6 text-olive-600" />
                 <div>
                   <p className="font-medium text-olive-800">Phone</p>
-                  <p className="text-olive-600">+1 (555) 123-4567</p>
+                  <p className="text-olive-600">{settings?.contactPhone || '+1 (555) 123-4567'}</p>
                 </div>
               </div>
               <div className="flex items-center space-x-4">
                 <MapPin className="h-6 w-6 text-olive-600" />
                 <div>
                   <p className="font-medium text-olive-800">Address</p>
-                  <p className="text-olive-600">123 Business St, City, State 12345</p>
+                  <p className="text-olive-600">
+                    {settings?.address ? 
+                      `${settings.address.street}, ${settings.address.city}, ${settings.address.state} ${settings.address.zipCode}` :
+                      '123 Business St, City, State 12345'
+                    }
+                  </p>
                 </div>
               </div>
             </div>
@@ -66,42 +77,13 @@ const Contact = () => {
               <CardTitle className="text-olive-800">Send us a Message</CardTitle>
             </CardHeader>
             <CardContent>
-              <form className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName" className="text-olive-700">First Name</Label>
-                    <Input id="firstName" className="bg-pearl-100 border-olive-200 text-olive-800" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName" className="text-olive-700">Last Name</Label>
-                    <Input id="lastName" className="bg-pearl-100 border-olive-200 text-olive-800" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="text-olive-700">Email</Label>
-                  <Input id="email" type="email" className="bg-pearl-100 border-olive-200 text-olive-800" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="subject" className="text-olive-700">Subject</Label>
-                  <Input id="subject" className="bg-pearl-100 border-olive-200 text-olive-800" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="message" className="text-olive-700">Message</Label>
-                  <textarea 
-                    id="message" 
-                    rows={5}
-                    className="w-full px-3 py-2 bg-pearl-100 border border-olive-200 rounded-md text-olive-800 focus:outline-none focus:ring-2 focus:ring-olive-500"
-                  />
-                </div>
-                <Button type="submit" className="w-full bg-olive-600 hover:bg-olive-700 text-pearl-50">
-                  Send Message
-                </Button>
-              </form>
+              <ContactFormHandler />
             </CardContent>
           </Card>
         </div>
       </section>
 
+      <WhatsAppChat />
       <Footer />
     </div>
   );
