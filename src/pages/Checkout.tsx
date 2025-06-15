@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,6 +17,9 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { ShoppingBag, CreditCard, Truck, Wallet, Banknote } from 'lucide-react';
 import { Product } from '@/types';
+import { ShippingRate, ShippingQuoteRequest } from '@/types/shipping';
+import ShippingOptions from '@/components/ShippingOptions';
+import { validateAddress } from '@/services/addressValidation';
 
 interface CheckoutFormData {
   email: string;
@@ -51,6 +53,8 @@ const Checkout = () => {
   const { data: products = [] } = useProducts();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedShippingRate, setSelectedShippingRate] = useState<ShippingRate | null>(null);
+  const [shippingQuoteRequest, setShippingQuoteRequest] = useState<ShippingQuoteRequest | null>(null);
 
   // Get checkout items (from cart or single product from Buy Now)
   const checkoutItem = location.state?.product;
@@ -76,6 +80,7 @@ const Checkout = () => {
   });
 
   const paymentMethod = watch('paymentMethod');
+  const watchedAddress = watch(['address', 'city', 'state', 'zipCode']);
 
   const getCheckoutItems = (): CheckoutItem[] => {
     if (isDirectPurchase) {
@@ -102,6 +107,54 @@ const Checkout = () => {
   };
 
   const checkoutItems = getCheckoutItems();
+
+  // Calculate package details for shipping
+  const calculatePackageDetails = () => {
+    const totalWeight = checkoutItems.reduce((weight, item) => {
+      return weight + (item.product.weight || 0.5) * item.quantity; // Default 0.5kg if weight not specified
+    }, 0);
+    
+    const totalValue = checkoutItems.reduce((value, item) => {
+      return value + item.product.price * item.quantity;
+    }, 0);
+
+    return {
+      weight: Math.max(totalWeight, 0.1), // Minimum 100g
+      dimensions: {
+        length: 30, // Default package dimensions in cm
+        width: 20,
+        height: 10
+      },
+      value: totalValue
+    };
+  };
+
+  // Update shipping quote when address changes
+  useEffect(() => {
+    const [address, city, state, zipCode] = watchedAddress;
+    
+    if (address && city && state && zipCode && zipCode.length === 6) {
+      const packageDetails = calculatePackageDetails();
+      
+      const quoteRequest: ShippingQuoteRequest = {
+        origin: {
+          zipCode: '400001', // Your business location pincode
+          city: 'Mumbai',
+          state: 'Maharashtra'
+        },
+        destination: {
+          street: address,
+          city,
+          state,
+          zipCode,
+          country: 'IN'
+        },
+        packageDetails
+      };
+      
+      setShippingQuoteRequest(quoteRequest);
+    }
+  }, [watchedAddress, checkoutItems]);
   
   // Calculate subtotal with proper typing
   const subtotal = checkoutItems.reduce((total: number, item: CheckoutItem) => {
@@ -109,13 +162,32 @@ const Checkout = () => {
   }, 0);
 
   const gst = subtotal * 0.18; // 18% GST for India
-  const shipping = subtotal > 500 ? 0 : 50; // Free shipping above ₹500
+  const shippingCost = selectedShippingRate?.rate || (subtotal > 500 ? 0 : 50);
   const codCharges = paymentMethod === 'cod' ? 25 : 0; // ₹25 COD charges
-  const total = subtotal + gst + shipping + codCharges;
+  const total = subtotal + gst + shippingCost + codCharges;
 
   const onSubmit = async (data: CheckoutFormData) => {
     setIsProcessing(true);
     try {
+      // Validate address before proceeding
+      const addressValidation = await validateAddress({
+        street: data.address,
+        city: data.city,
+        state: data.state,
+        zipCode: data.zipCode,
+        country: 'IN'
+      });
+
+      if (!addressValidation.isValid) {
+        toast({
+          title: "Address Validation Failed",
+          description: addressValidation.errors?.join(', '),
+          variant: "destructive",
+        });
+        setIsProcessing(false);
+        return;
+      }
+
       // Fix payment method mapping to match Order interface
       let paymentMethodValue: 'cash_on_delivery' | 'card' | 'paypal' | 'upi';
       if (data.paymentMethod === 'cod') {
@@ -140,7 +212,7 @@ const Checkout = () => {
         total,
         subtotal,
         tax: gst,
-        shipping,
+        shipping: shippingCost,
         status: 'pending' as const,
         paymentStatus: paymentStatusValue,
         shippingAddress: {
@@ -162,7 +234,7 @@ const Checkout = () => {
 
       toast({
         title: "Order placed successfully!",
-        description: "You will receive a confirmation email shortly.",
+        description: `Order total: ₹${total.toFixed(2)}. ${selectedShippingRate ? `Shipping via ${selectedShippingRate.providerName}` : ''}`,
       });
 
       navigate('/');
@@ -305,6 +377,15 @@ const Checkout = () => {
                 </CardContent>
               </Card>
 
+              {/* Shipping Options */}
+              {shippingQuoteRequest && (
+                <ShippingOptions
+                  shippingRequest={shippingQuoteRequest}
+                  selectedRate={selectedShippingRate}
+                  onRateSelect={setSelectedShippingRate}
+                />
+              )}
+
               {/* Payment Method */}
               <Card className="bg-pearl-100 border-olive-200">
                 <CardHeader>
@@ -445,9 +526,11 @@ const Checkout = () => {
                     <span className="text-olive-800">₹{gst.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-olive-700">Shipping</span>
+                    <span className="text-olive-700">
+                      Shipping {selectedShippingRate ? `(${selectedShippingRate.providerName})` : ''}
+                    </span>
                     <span className="text-olive-800">
-                      {shipping === 0 ? 'Free' : `₹${shipping.toFixed(2)}`}
+                      {shippingCost === 0 ? 'Free' : `₹${shippingCost.toFixed(2)}`}
                     </span>
                   </div>
                   {codCharges > 0 && (
