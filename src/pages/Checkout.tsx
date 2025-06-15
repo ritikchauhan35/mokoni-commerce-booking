@@ -104,6 +104,7 @@ const Checkout = () => {
         tax,
         shipping,
         status: 'pending' as const,
+        paymentStatus: 'pending' as const,
         shippingAddress: {
           firstName: data.firstName,
           lastName: data.lastName,
@@ -116,7 +117,8 @@ const Checkout = () => {
         paymentMethod: {
           type: 'card',
           last4: data.cardNumber.slice(-4)
-        }
+        },
+        createdAt: new Date()
       };
 
       await createOrder(order);
