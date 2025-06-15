@@ -37,15 +37,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log('Auth state changed:', user?.uid);
       setUser(user);
       
       if (user) {
         try {
+          console.log('Fetching user profile for:', user.uid);
           // Try to get existing user profile
           let profile = await getUserProfile(user.uid);
+          console.log('Existing profile:', profile);
           
           // If no profile exists, create one with default user role
           if (!profile) {
+            console.log('No profile found, creating new profile');
             const newUserData: Omit<UserProfile, 'id'> = {
               name: user.displayName || '',
               email: user.email || '',
@@ -54,15 +58,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             };
             
             await createUserProfile(user.uid, newUserData);
+            console.log('Profile created, fetching again');
             profile = await getUserProfile(user.uid);
+            console.log('New profile:', profile);
           }
           
           setUserProfile(profile);
+          console.log('Final user profile set:', profile);
         } catch (error) {
-          console.error('Error fetching user profile:', error);
+          console.error('Error fetching/creating user profile:', error);
           setUserProfile(null);
         }
       } else {
+        console.log('No user, clearing profile');
         setUserProfile(null);
       }
       
@@ -86,6 +94,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super_admin';
   const isSuperAdmin = userProfile?.role === 'super_admin';
+
+  console.log('Current auth state:', { user: user?.uid, userProfile, isAdmin, isSuperAdmin });
 
   const value = {
     user,

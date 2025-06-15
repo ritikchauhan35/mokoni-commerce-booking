@@ -1,4 +1,3 @@
-
 import { 
   collection, 
   doc, 
@@ -13,7 +12,8 @@ import {
   limit,
   onSnapshot,
   writeBatch,
-  serverTimestamp
+  serverTimestamp,
+  setDoc
 } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { Product, Property, CartItem, Order, Booking, Review, User } from '@/types';
@@ -195,7 +195,7 @@ export const addReview = async (review: Omit<Review, 'id'>) => {
 
 // User Management
 export const createUserProfile = async (userId: string, userData: Omit<User, 'id'>) => {
-  return await updateDoc(doc(db, 'users', userId), {
+  return await setDoc(doc(db, 'users', userId), {
     ...userData,
     createdAt: serverTimestamp()
   });
