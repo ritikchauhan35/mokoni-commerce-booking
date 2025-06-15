@@ -1,15 +1,16 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useForm } from 'react-hook-form';
 import { Property } from '@/types';
 import { addProperty, updateProperty } from '@/services';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
+import FileUpload from '@/components/ui/file-upload';
 
 interface PropertyFormModalProps {
   isOpen: boolean;
@@ -32,9 +33,12 @@ interface PropertyFormData {
 }
 
 const PropertyFormModal: React.FC<PropertyFormModalProps> = ({ isOpen, onClose, property, mode }) => {
-  const { register, handleSubmit, formState: { errors }, reset, setValue } = useForm<PropertyFormData>();
+  const { register, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<PropertyFormData>();
+  const [imageMethod, setImageMethod] = useState<'url' | 'upload'>('url');
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  const watchedImages = watch('images');
 
   React.useEffect(() => {
     if (property && mode === 'edit') {
@@ -48,10 +52,26 @@ const PropertyFormModal: React.FC<PropertyFormModalProps> = ({ isOpen, onClose, 
       setValue('images', property.images.join(', '));
       setValue('amenities', property.amenities.join(', '));
       setValue('rules', property.rules?.join(', '));
+      
+      // Detect if images are URLs or base64
+      const hasBase64 = property.images.some(img => img.startsWith('data:'));
+      setImageMethod(hasBase64 ? 'upload' : 'url');
     } else {
       reset();
+      setImageMethod('url');
     }
   }, [property, mode, setValue, reset]);
+
+  const handleFileUpload = (urls: string[]) => {
+    setValue('images', urls.join(', '));
+  };
+
+  const getCurrentImages = (): string[] => {
+    if (imageMethod === 'upload' && watchedImages) {
+      return watchedImages.split(',').map(img => img.trim()).filter(img => img);
+    }
+    return [];
+  };
 
   const onSubmit = async (data: PropertyFormData) => {
     try {
@@ -176,13 +196,30 @@ const PropertyFormModal: React.FC<PropertyFormModalProps> = ({ isOpen, onClose, 
           </div>
 
           <div>
-            <Label htmlFor="images">Images (comma-separated URLs)</Label>
-            <Textarea
-              id="images"
-              {...register('images')}
-              placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
-              rows={2}
-            />
+            <Label>Images</Label>
+            <Tabs value={imageMethod} onValueChange={(value) => setImageMethod(value as 'url' | 'upload')}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="url">Image URLs</TabsTrigger>
+                <TabsTrigger value="upload">Upload Images</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="url">
+                <Textarea
+                  {...register('images')}
+                  placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
+                  rows={2}
+                />
+              </TabsContent>
+              
+              <TabsContent value="upload">
+                <FileUpload
+                  onFilesChange={handleFileUpload}
+                  currentFiles={getCurrentImages()}
+                  multiple={true}
+                  showPreview={true}
+                />
+              </TabsContent>
+            </Tabs>
           </div>
 
           <div>

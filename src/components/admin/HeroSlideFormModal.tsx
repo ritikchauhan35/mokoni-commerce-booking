@@ -1,5 +1,4 @@
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -28,13 +27,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HeroSlide } from '@/types/hero';
+import FileUpload from '@/components/ui/file-upload';
 
 const heroSlideSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title must be less than 100 characters'),
   subtitle: z.string().min(1, 'Subtitle is required').max(150, 'Subtitle must be less than 150 characters'),
   description: z.string().min(1, 'Description is required').max(300, 'Description must be less than 300 characters'),
-  image: z.string().url('Please enter a valid image URL'),
+  image: z.string().min(1, 'Image is required'),
   primaryAction: z.string().min(1, 'Primary action text is required').max(50, 'Primary action must be less than 50 characters'),
   secondaryAction: z.string().min(1, 'Secondary action text is required').max(50, 'Secondary action must be less than 50 characters'),
   actionType: z.enum(['shop', 'book', 'explore']),
@@ -58,6 +59,8 @@ const HeroSlideFormModal: React.FC<HeroSlideFormModalProps> = ({
   slide,
   loading = false,
 }) => {
+  const [imageMethod, setImageMethod] = useState<'url' | 'upload'>('url');
+  
   const form = useForm<HeroSlideFormData>({
     resolver: zodResolver(heroSlideSchema),
     defaultValues: {
@@ -84,6 +87,8 @@ const HeroSlideFormModal: React.FC<HeroSlideFormModalProps> = ({
         actionType: slide.actionType,
         isActive: slide.isActive,
       });
+      // Detect if image is a URL or base64
+      setImageMethod(slide.image.startsWith('data:') ? 'upload' : 'url');
     } else {
       form.reset({
         title: '',
@@ -95,6 +100,7 @@ const HeroSlideFormModal: React.FC<HeroSlideFormModalProps> = ({
         actionType: 'shop',
         isActive: true,
       });
+      setImageMethod('url');
     }
   }, [slide, form]);
 
@@ -106,6 +112,12 @@ const HeroSlideFormModal: React.FC<HeroSlideFormModalProps> = ({
   const handleClose = () => {
     form.reset();
     onClose();
+  };
+
+  const handleFileUpload = (urls: string[]) => {
+    if (urls.length > 0) {
+      form.setValue('image', urls[0]);
+    }
   };
 
   const imageUrl = form.watch('image');
@@ -174,10 +186,36 @@ const HeroSlideFormModal: React.FC<HeroSlideFormModalProps> = ({
               name="image"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Image URL</FormLabel>
-                  <FormControl>
-                    <Input placeholder="https://example.com/image.jpg" {...field} />
-                  </FormControl>
+                  <FormLabel>Image</FormLabel>
+                  <Tabs value={imageMethod} onValueChange={(value) => setImageMethod(value as 'url' | 'upload')}>
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="url">Image URL</TabsTrigger>
+                      <TabsTrigger value="upload">Upload Image</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="url">
+                      <FormControl>
+                        <Input 
+                          placeholder="https://example.com/image.jpg" 
+                          value={imageMethod === 'url' ? field.value : ''}
+                          onChange={(e) => {
+                            if (imageMethod === 'url') {
+                              field.onChange(e.target.value);
+                            }
+                          }}
+                        />
+                      </FormControl>
+                    </TabsContent>
+                    
+                    <TabsContent value="upload">
+                      <FileUpload
+                        onFilesChange={handleFileUpload}
+                        currentFiles={imageMethod === 'upload' && field.value ? [field.value] : []}
+                        multiple={false}
+                        showPreview={true}
+                      />
+                    </TabsContent>
+                  </Tabs>
                   <FormMessage />
                   {imageUrl && (
                     <div className="mt-2">

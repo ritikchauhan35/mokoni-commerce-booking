@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
@@ -12,8 +12,6 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { ShoppingBag } from 'lucide-react';
 import { Product } from '@/types';
-import { ShippingRate, ShippingQuoteRequest } from '@/types/shipping';
-import ShippingOptions from '@/components/ShippingOptions';
 import { validateAddress } from '@/services/addressValidation';
 import ContactForm from '@/components/checkout/ContactForm';
 import AddressForm from '@/components/checkout/AddressForm';
@@ -52,8 +50,6 @@ const Checkout = () => {
   const { data: products = [] } = useProducts();
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedShippingRate, setSelectedShippingRate] = useState<ShippingRate | null>(null);
-  const [shippingQuoteRequest, setShippingQuoteRequest] = useState<ShippingQuoteRequest | null>(null);
 
   // Get checkout items (from cart or single product from Buy Now)
   const checkoutItem = location.state?.product;
@@ -79,7 +75,6 @@ const Checkout = () => {
   });
 
   const paymentMethod = watch('paymentMethod');
-  const watchedAddress = watch(['address', 'city', 'state', 'zipCode']);
 
   const getCheckoutItems = (): CheckoutItem[] => {
     if (isDirectPurchase) {
@@ -106,62 +101,14 @@ const Checkout = () => {
   };
 
   const checkoutItems = getCheckoutItems();
-
-  // Calculate package details for shipping
-  const calculatePackageDetails = () => {
-    const totalWeight = checkoutItems.reduce((weight, item) => {
-      return weight + (item.product.weight || 0.5) * item.quantity;
-    }, 0);
-    
-    const totalValue = checkoutItems.reduce((value, item) => {
-      return value + item.product.price * item.quantity;
-    }, 0);
-
-    return {
-      weight: Math.max(totalWeight, 0.1),
-      dimensions: {
-        length: 30,
-        width: 20,
-        height: 10
-      },
-      value: totalValue
-    };
-  };
-
-  // Update shipping quote when address changes
-  useEffect(() => {
-    const [address, city, state, zipCode] = watchedAddress;
-    
-    if (address && city && state && zipCode && zipCode.length === 6) {
-      const packageDetails = calculatePackageDetails();
-      
-      const quoteRequest: ShippingQuoteRequest = {
-        origin: {
-          zipCode: '400001',
-          city: 'Mumbai',
-          state: 'Maharashtra'
-        },
-        destination: {
-          street: address,
-          city,
-          state,
-          zipCode,
-          country: 'IN'
-        },
-        packageDetails
-      };
-      
-      setShippingQuoteRequest(quoteRequest);
-    }
-  }, [watchedAddress, checkoutItems]);
   
-  // Calculate totals
+  // Calculate totals (simplified without shipping)
   const subtotal = checkoutItems.reduce((total: number, item: CheckoutItem) => {
     return total + (item.product.price * item.quantity);
   }, 0);
 
   const gst = subtotal * 0.18;
-  const shippingCost = selectedShippingRate?.rate || (subtotal > 500 ? 0 : 50);
+  const shippingCost = subtotal > 500 ? 0 : 50; // Simple shipping calculation
   const codCharges = paymentMethod === 'cod' ? 25 : 0;
   const total = subtotal + gst + shippingCost + codCharges;
 
@@ -187,7 +134,7 @@ const Checkout = () => {
         return;
       }
 
-      // Fix payment method mapping to match Order interface
+      // Map payment method to match Order interface
       let paymentMethodValue: 'cash_on_delivery' | 'card' | 'paypal' | 'upi';
       if (data.paymentMethod === 'cod') {
         paymentMethodValue = 'cash_on_delivery';
@@ -196,8 +143,6 @@ const Checkout = () => {
       } else {
         paymentMethodValue = 'card';
       }
-
-      const paymentStatusValue: 'pending' | 'paid' | 'failed' | 'refunded' = 'pending';
 
       const order = {
         userId: user?.uid || 'guest',
@@ -212,7 +157,7 @@ const Checkout = () => {
         tax: gst,
         shipping: shippingCost,
         status: 'pending' as const,
-        paymentStatus: paymentStatusValue,
+        paymentStatus: 'pending' as const,
         shippingAddress: {
           street: data.address,
           city: data.city,
@@ -232,7 +177,7 @@ const Checkout = () => {
 
       toast({
         title: "Order placed successfully!",
-        description: `Order total: ₹${total.toFixed(2)}. ${selectedShippingRate ? `Shipping via ${selectedShippingRate.providerName}` : ''}`,
+        description: `Order total: ₹${total.toFixed(2)}`,
       });
 
       navigate('/');
@@ -276,16 +221,6 @@ const Checkout = () => {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <ContactForm register={register} errors={errors} />
               <AddressForm register={register} errors={errors} />
-
-              {/* Shipping Options */}
-              {shippingQuoteRequest && (
-                <ShippingOptions
-                  shippingRequest={shippingQuoteRequest}
-                  selectedRate={selectedShippingRate}
-                  onRateSelect={setSelectedShippingRate}
-                />
-              )}
-
               <PaymentForm 
                 register={register} 
                 errors={errors} 
@@ -311,7 +246,7 @@ const Checkout = () => {
               shippingCost={shippingCost}
               codCharges={codCharges}
               total={total}
-              selectedShippingRate={selectedShippingRate}
+              selectedShippingRate={null}
             />
           </div>
         </div>

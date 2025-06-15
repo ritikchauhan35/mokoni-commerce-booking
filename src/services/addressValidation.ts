@@ -1,25 +1,12 @@
 
 import { ShippingAddress, AddressValidation } from '@/types/shipping';
 
-// India Post PIN Code API integration (Free)
-const INDIA_POST_BASE_URL = 'https://api.postalpincode.in';
+// Data.gov.in PIN Code API with provided key
+const DATA_GOV_API_KEY = '579b464db66ec23bdd00000135c042f9159b4eef553ab76f7f57f0f5';
+const DATA_GOV_BASE_URL = 'https://api.data.gov.in/resource';
 
 // OpenStreetMap Nominatim API (Free geocoding)
 const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org';
-
-// Indian postal code patterns by state
-const POSTAL_CODE_PATTERNS: Record<string, RegExp> = {
-  'maharashtra': /^4[0-9]{5}$/,
-  'delhi': /^1[0-9]{5}$/,
-  'karnataka': /^5[0-9]{5}$/,
-  'tamil nadu': /^6[0-9]{5}$/,
-  'west bengal': /^7[0-9]{5}$/,
-  'telangana': /^5[0-9]{5}$/,
-  'gujarat': /^3[0-9]{5}$/,
-  'rajasthan': /^3[0-9]{5}$/,
-  'uttar pradesh': /^2[0-9]{5}$/,
-  'bihar': /^8[0-9]{5}$/
-};
 
 // Zone mapping for shipping calculations
 const SHIPPING_ZONES: Record<string, number> = {
@@ -63,20 +50,23 @@ export const validatePincode = async (pincode: string): Promise<boolean> => {
   }
   
   try {
-    // Use India Post API for validation
-    const response = await fetch(`${INDIA_POST_BASE_URL}/pincode/${pincode}`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
+    // Use Data.gov.in API for validation
+    const response = await fetch(
+      `${DATA_GOV_BASE_URL}/25198f6c-d6b3-4112-af83-4f62c1d13e24?api-key=${DATA_GOV_API_KEY}&format=json&filters[pincode]=${pincode}`,
+      {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        }
       }
-    });
+    );
     
     if (response.ok) {
       const data = await response.json();
-      return data[0]?.Status === 'Success' && data[0]?.PostOffice?.length > 0;
+      return data.records && data.records.length > 0;
     }
   } catch (error) {
-    console.log('India Post API unavailable, using fallback validation');
+    console.log('Data.gov.in API unavailable, using fallback validation');
   }
   
   // Fallback validation
@@ -92,31 +82,34 @@ export const getPincodeDetails = async (pincode: string): Promise<{
   zone: string;
 } | null> => {
   try {
-    // Use India Post API for detailed information
-    const response = await fetch(`${INDIA_POST_BASE_URL}/pincode/${pincode}`, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
+    // Use Data.gov.in API for detailed information
+    const response = await fetch(
+      `${DATA_GOV_BASE_URL}/25198f6c-d6b3-4112-af83-4f62c1d13e24?api-key=${DATA_GOV_API_KEY}&format=json&filters[pincode]=${pincode}`,
+      {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        }
       }
-    });
+    );
     
     if (response.ok) {
       const data = await response.json();
-      if (data[0]?.Status === 'Success' && data[0]?.PostOffice?.length > 0) {
-        const postOffice = data[0].PostOffice[0];
-        const state = postOffice.State.toLowerCase();
+      if (data.records && data.records.length > 0) {
+        const record = data.records[0];
+        const state = record.statename?.toLowerCase() || '';
         const zone = STATE_TO_ZONE[state] || 'central';
         
         return {
-          city: postOffice.District,
-          state: postOffice.State,
-          district: postOffice.District,
+          city: record.districtname || record.officename || 'Unknown',
+          state: record.statename || 'Unknown',
+          district: record.districtname || 'Unknown',
           zone
         };
       }
     }
   } catch (error) {
-    console.log('India Post API error, using fallback data');
+    console.log('Data.gov.in API error, using fallback data');
   }
   
   // Fallback data for common pincodes
@@ -140,7 +133,7 @@ export const validateAddress = async (
   // Validate pincode
   const isPincodeValid = await validatePincode(address.zipCode);
   if (!isPincodeValid) {
-    errors.push('Invalid postal code format');
+    errors.push('Invalid postal code - PIN code not found in Indian postal directory');
   }
   
   // Get pincode details and validate state-pincode combination
