@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,6 +24,7 @@ import AdminProperties from "./pages/admin/Properties";
 import AdminOrders from "./pages/admin/Orders";
 import AdminBookings from "./pages/admin/Bookings";
 import AdminUsers from "./pages/admin/Users";
+import AdminHeroSlides from "./pages/admin/HeroSlides";
 import Checkout from "./pages/Checkout";
 
 const queryClient = new QueryClient();
@@ -52,6 +54,13 @@ const App = () => (
               <AdminRoute>
                 <AdminLayout>
                   <AdminDashboard />
+                </AdminLayout>
+              </AdminRoute>
+            } />
+            <Route path="/admin/hero-slides" element={
+              <AdminRoute>
+                <AdminLayout>
+                  <AdminHeroSlides />
                 </AdminLayout>
               </AdminRoute>
             } />
