@@ -106,13 +106,11 @@ const Checkout = () => {
         status: 'pending' as const,
         paymentStatus: 'pending' as const,
         shippingAddress: {
-          firstName: data.firstName,
-          lastName: data.lastName,
-          address: data.address,
+          street: data.address,
           city: data.city,
           state: data.state,
           zipCode: data.zipCode,
-          phone: data.phone
+          country: 'US'
         },
         paymentMethod: {
           type: 'card',
