@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart, User, Search, Menu, X, LogOut } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCart } from '@/hooks/useCart';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, logout } = useAuth();
+  const { getCartTotal } = useCart();
 
   const handleLogout = async () => {
     try {
@@ -76,7 +78,7 @@ const Navbar = () => {
             <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 relative">
               <ShoppingCart className="h-5 w-5" />
               <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                0
+                {getCartTotal()}
               </span>
             </Button>
             
