@@ -1,9 +1,8 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '@/config/firebase';
-import { getUserProfile, createUserProfile } from '@/services/firestore';
-import { User as UserProfile } from '@/types';
+import { createUserProfile, getUserProfile } from '@/services';
+import { User } from '@/types';
 
 interface AuthContextType {
   user: User | null;
@@ -89,7 +88,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = async () => {
-    await signOut(auth);
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super_admin';

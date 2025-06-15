@@ -6,9 +6,10 @@ import { Star, ShoppingCart } from 'lucide-react';
 import { useProducts } from '@/hooks/useProducts';
 import { useCart } from '@/hooks/useCart';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Product } from '@/types';
 
 const ProductGrid = () => {
-  const { data: products, isLoading, error } = useProducts();
+  const { data: products = [], isLoading, error } = useProducts();
   const { addItem } = useCart();
 
   if (isLoading) {
@@ -53,7 +54,7 @@ const ProductGrid = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      {products.map((product) => (
+      {products.map((product: Product) => (
         <Card key={product.id} className="bg-pearl-50 border-olive-200 hover:bg-pearl-100 transition-all duration-300 group shadow-lg hover:shadow-xl">
           <CardHeader className="p-0">
             <div className="relative overflow-hidden rounded-t-lg">
@@ -93,9 +94,13 @@ const ProductGrid = () => {
             </div>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
-                <span className="text-olive-800 font-bold text-lg">${product.price.toFixed(2)}</span>
+                <span className="text-olive-800 font-bold text-lg">
+                  ${typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
+                </span>
                 {product.originalPrice && (
-                  <span className="text-gray-500 line-through text-sm">${product.originalPrice.toFixed(2)}</span>
+                  <span className="text-gray-500 line-through text-sm">
+                    ${typeof product.originalPrice === 'number' ? product.originalPrice.toFixed(2) : '0.00'}
+                  </span>
                 )}
               </div>
             </div>

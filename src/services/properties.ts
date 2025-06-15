@@ -7,8 +7,6 @@ import {
   addDoc, 
   updateDoc, 
   deleteDoc, 
-  query, 
-  where, 
   serverTimestamp
 } from 'firebase/firestore';
 import { db } from '@/config/firebase';
@@ -40,22 +38,6 @@ export const deleteProperty = async (id: string) => {
   return await deleteDoc(doc(db, 'properties', id));
 };
 
-export const getPropertiesByLocation = async (location: string): Promise<Property[]> => {
-  const propertiesRef = collection(db, 'properties');
-  const q = query(propertiesRef, where('location', '==', location));
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Property));
-};
-
-export const getPropertyLocations = async (): Promise<string[]> => {
-  const propertiesRef = collection(db, 'properties');
-  const snapshot = await getDocs(propertiesRef);
-  const locations = new Set<string>();
-  
-  snapshot.docs.forEach(doc => {
-    const property = doc.data() as Property;
-    locations.add(property.location);
-  });
-  
-  return Array.from(locations).sort();
+export const getAllProperties = async (): Promise<Property[]> => {
+  return await getProperties();
 };

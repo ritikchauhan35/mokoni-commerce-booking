@@ -1,7 +1,6 @@
 
-import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getProperties, getProperty } from '@/services/firestore';
+import { getProperties, getProperty } from '@/services';
 import { Property } from '@/types';
 
 export const useProperties = () => {

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { getCartItems, addToCart, updateCartItem, removeFromCart } from '@/services/firestore';
+import { getCartItems, addToCart, updateCartItem, removeFromCart } from '@/services';
 import { CartItem } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 
