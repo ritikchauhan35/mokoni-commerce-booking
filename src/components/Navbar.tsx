@@ -2,11 +2,21 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, User, Search, Menu, X } from 'lucide-react';
+import { ShoppingCart, User, Search, Menu, X, LogOut } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
 
   return (
     <nav className="sticky top-0 z-50 bg-black/20 backdrop-blur-md border-b border-white/10">
@@ -47,9 +57,22 @@ const Navbar = () => {
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
-              <User className="h-5 w-5" />
-            </Button>
+            {user ? (
+              <>
+                <span className="text-white text-sm hidden md:block">
+                  Hello, {user.email}
+                </span>
+                <Button variant="ghost" size="sm" className="text-white hover:bg-white/10" onClick={handleLogout}>
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </>
+            ) : (
+              <Link to="/login">
+                <Button variant="ghost" size="sm" className="text-white hover:bg-white/10">
+                  <User className="h-5 w-5" />
+                </Button>
+              </Link>
+            )}
             <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 relative">
               <ShoppingCart className="h-5 w-5" />
               <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -92,6 +115,20 @@ const Navbar = () => {
               <Link to="/contact" className="text-gray-300 hover:text-white transition-colors py-2">
                 Contact
               </Link>
+              {user ? (
+                <Button onClick={handleLogout} className="text-left">
+                  Logout
+                </Button>
+              ) : (
+                <>
+                  <Link to="/login" className="text-gray-300 hover:text-white transition-colors py-2">
+                    Login
+                  </Link>
+                  <Link to="/register" className="text-gray-300 hover:text-white transition-colors py-2">
+                    Register
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}
