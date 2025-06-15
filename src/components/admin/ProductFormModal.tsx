@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -26,9 +25,9 @@ interface ProductFormData {
   description: string;
   price: number;
   originalPrice?: number;
-  category: string;
+  category?: string;
   images: string;
-  inventory: number;
+  inventory?: number;
   inStock: boolean;
   weight?: number;
   tags?: string;
@@ -110,6 +109,8 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, pr
     try {
       const productData = {
         ...data,
+        category: data.category || 'Uncategorized',
+        inventory: data.inventory || 0,
         images: uploadedImages.length > 0 ? uploadedImages : data.images.split(',').map(img => img.trim()).filter(img => img),
         tags: data.tags ? data.tags.split(',').map(tag => tag.trim()).filter(tag => tag) : [],
         rating: product?.rating || 0,
@@ -162,13 +163,12 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, pr
               {errors.name && <p className="text-red-500 text-sm">{errors.name.message}</p>}
             </div>
             <div>
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category">Category (Optional)</Label>
               <Input
                 id="category"
-                {...register('category', { required: 'Category is required' })}
+                {...register('category')}
                 placeholder="Enter category"
               />
-              {errors.category && <p className="text-red-500 text-sm">{errors.category.message}</p>}
             </div>
           </div>
 
@@ -196,7 +196,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, pr
               {errors.price && <p className="text-red-500 text-sm">{errors.price.message}</p>}
             </div>
             <div>
-              <Label htmlFor="originalPrice">Original Price ($)</Label>
+              <Label htmlFor="originalPrice">Original Price ($) (Optional)</Label>
               <Input
                 id="originalPrice"
                 type="number"
@@ -206,11 +206,11 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, pr
               />
             </div>
             <div>
-              <Label htmlFor="inventory">Inventory</Label>
+              <Label htmlFor="inventory">Inventory (Optional)</Label>
               <Input
                 id="inventory"
                 type="number"
-                {...register('inventory', { required: 'Inventory is required', min: 0 })}
+                {...register('inventory', { min: 0 })}
                 placeholder="0"
               />
               {errors.inventory && <p className="text-red-500 text-sm">{errors.inventory.message}</p>}
@@ -282,7 +282,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, pr
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="weight">Weight (kg)</Label>
+              <Label htmlFor="weight">Weight (kg) (Optional)</Label>
               <Input
                 id="weight"
                 type="number"
@@ -292,7 +292,7 @@ const ProductFormModal: React.FC<ProductFormModalProps> = ({ isOpen, onClose, pr
               />
             </div>
             <div>
-              <Label htmlFor="tags">Tags (comma-separated)</Label>
+              <Label htmlFor="tags">Tags (comma-separated) (Optional)</Label>
               <Input
                 id="tags"
                 {...register('tags')}

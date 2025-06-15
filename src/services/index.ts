@@ -23,5 +23,11 @@ export * from './users';
 // Checkout
 export * from './checkout';
 
+// Analytics
+export * from './analytics';
+
+// Settings
+export * from './settings';
+
 // Real-time listeners
 export * from './realtime';

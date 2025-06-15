@@ -25,6 +25,8 @@ import AdminOrders from "./pages/admin/Orders";
 import AdminBookings from "./pages/admin/Bookings";
 import AdminUsers from "./pages/admin/Users";
 import AdminHeroSlides from "./pages/admin/HeroSlides";
+import AdminAnalytics from "./pages/admin/Analytics";
+import AdminSettings from "./pages/admin/Settings";
 import Checkout from "./pages/Checkout";
 
 const queryClient = new QueryClient();
@@ -96,6 +98,20 @@ const App = () => (
               <AdminRoute>
                 <AdminLayout>
                   <AdminUsers />
+                </AdminLayout>
+              </AdminRoute>
+            } />
+            <Route path="/admin/analytics" element={
+              <AdminRoute>
+                <AdminLayout>
+                  <AdminAnalytics />
+                </AdminLayout>
+              </AdminRoute>
+            } />
+            <Route path="/admin/settings" element={
+              <AdminRoute>
+                <AdminLayout>
+                  <AdminSettings />
                 </AdminLayout>
               </AdminRoute>
             } />
