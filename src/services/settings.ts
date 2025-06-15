@@ -54,12 +54,15 @@ const defaultSettings: SiteSettings = {
   maintenanceMode: false,
   notifications: {
     emailEnabled: true,
-    whatsappEnabled: false,
+    whatsappEnabled: true,
     adminEmail: 'admin@mokoni.com',
-    adminWhatsapp: '',
+    adminWhatsapp: '+1234567890',
     twilioAccountSid: '',
     twilioAuthToken: '',
-    twilioWhatsappNumber: ''
+    twilioWhatsappNumber: '',
+    emailjsServiceId: '',
+    emailjsTemplateId: '',
+    emailjsPublicKey: ''
   },
   createdAt: new Date(),
   updatedAt: new Date()

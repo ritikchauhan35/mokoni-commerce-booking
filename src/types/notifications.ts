@@ -7,6 +7,10 @@ export interface NotificationConfig {
   twilioAccountSid?: string;
   twilioAuthToken?: string;
   twilioWhatsappNumber?: string;
+  // EmailJS configuration
+  emailjsServiceId?: string;
+  emailjsTemplateId?: string;
+  emailjsPublicKey?: string;
 }
 
 export interface NotificationTemplate {

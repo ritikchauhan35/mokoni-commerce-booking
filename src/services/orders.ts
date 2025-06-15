@@ -1,3 +1,4 @@
+
 import { 
   collection, 
   doc, 
@@ -7,7 +8,8 @@ import {
   query, 
   where, 
   orderBy, 
-  serverTimestamp
+  serverTimestamp,
+  Timestamp
 } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { Order } from '@/types';
@@ -15,10 +17,14 @@ import { sendOrderNotification, sendOrderStatusNotification } from './notificati
 import { getSettings } from './settings';
 
 export const createOrder = async (order: Omit<Order, 'id'>) => {
-  const orderRef = await addDoc(collection(db, 'orders'), {
+  const orderData = {
     ...order,
-    createdAt: serverTimestamp()
-  });
+    createdAt: serverTimestamp(),
+    orderDate: new Date().toISOString(), // Add human-readable date
+    orderNumber: generateOrderNumber() // Add order number
+  };
+
+  const orderRef = await addDoc(collection(db, 'orders'), orderData);
 
   // Send notification to admin
   try {
@@ -43,22 +49,51 @@ export const createOrder = async (order: Omit<Order, 'id'>) => {
   return orderRef;
 };
 
+// Generate a human-readable order number
+const generateOrderNumber = (): string => {
+  const now = new Date();
+  const year = now.getFullYear().toString().slice(-2);
+  const month = (now.getMonth() + 1).toString().padStart(2, '0');
+  const day = now.getDate().toString().padStart(2, '0');
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `ORD${year}${month}${day}${random}`;
+};
+
 export const getUserOrders = async (userId: string): Promise<Order[]> => {
   const ordersRef = collection(db, 'orders');
   const q = query(ordersRef, where('userId', '==', userId), orderBy('createdAt', 'desc'));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+  return snapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      // Convert Firestore timestamp to Date
+      createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : data.createdAt
+    } as Order;
+  });
 };
 
 export const getAllOrders = async (): Promise<Order[]> => {
   const ordersRef = collection(db, 'orders');
   const q = query(ordersRef, orderBy('createdAt', 'desc'));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
+  return snapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      ...data,
+      // Convert Firestore timestamp to Date
+      createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : data.createdAt
+    } as Order;
+  });
 };
 
 export const updateOrderStatus = async (orderId: string, status: Order['status']) => {
-  await updateDoc(doc(db, 'orders', orderId), { status });
+  await updateDoc(doc(db, 'orders', orderId), { 
+    status,
+    updatedAt: serverTimestamp()
+  });
 
   // Send status update notification
   try {

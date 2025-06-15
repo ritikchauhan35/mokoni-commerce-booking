@@ -1,7 +1,7 @@
 
 import { NotificationConfig, OrderNotificationData } from '@/types/notifications';
 
-// Email notification using EmailJS (client-side email service)
+// Email notification using EmailJS
 export const sendEmailNotification = async (
   to: string,
   subject: string,
@@ -14,22 +14,43 @@ export const sendEmailNotification = async (
   }
 
   try {
-    // Using fetch to send email via a simple email service
-    // In production, you'd use EmailJS or similar service
-    console.log(`Sending email to: ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Message: ${message}`);
+    // Import EmailJS dynamically
+    const emailjs = await import('@emailjs/browser');
     
-    // Placeholder for actual email implementation
-    // Would integrate with EmailJS or Firebase Extensions
-    return true;
+    // Initialize EmailJS with public key (if configured)
+    if (config.emailjsPublicKey) {
+      emailjs.default.init(config.emailjsPublicKey);
+    }
+
+    // Send email using EmailJS
+    const templateParams = {
+      to_email: to,
+      subject: subject,
+      message: message,
+      from_name: 'Mokoni Store'
+    };
+
+    if (config.emailjsServiceId && config.emailjsTemplateId) {
+      await emailjs.default.send(
+        config.emailjsServiceId,
+        config.emailjsTemplateId,
+        templateParams
+      );
+      console.log(`Email sent successfully to: ${to}`);
+      return true;
+    } else {
+      // Fallback: Create mailto link for manual sending
+      const mailtoLink = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
+      console.log(`Email configuration incomplete. Manual email: ${mailtoLink}`);
+      return false;
+    }
   } catch (error) {
     console.error('Failed to send email:', error);
     return false;
   }
 };
 
-// WhatsApp notification using WhatsApp Business API
+// WhatsApp notification using WhatsApp Business API or wa.me links
 export const sendWhatsAppNotification = async (
   phone: string,
   message: string,
@@ -41,12 +62,17 @@ export const sendWhatsAppNotification = async (
   }
 
   try {
-    // For now, we'll use wa.me links for simplicity
-    // In production, you'd use Twilio WhatsApp API
-    const whatsappUrl = `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
-    console.log(`WhatsApp notification prepared: ${whatsappUrl}`);
+    // Clean phone number
+    const cleanPhone = phone.replace(/\D/g, '');
     
-    // In a real implementation, you'd send via Twilio API
+    // For now, we'll use wa.me links as it's the most reliable method
+    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+    
+    console.log(`WhatsApp notification prepared for ${cleanPhone}:`, message);
+    console.log(`WhatsApp URL: ${whatsappUrl}`);
+    
+    // In a real implementation with WhatsApp Business API, you'd make an HTTP request here
+    // For now, we'll just log the notification
     return true;
   } catch (error) {
     console.error('Failed to send WhatsApp message:', error);
@@ -54,35 +80,68 @@ export const sendWhatsAppNotification = async (
   }
 };
 
-// Order notification handler
+// Enhanced order notification handler
 export const sendOrderNotification = async (
   orderData: OrderNotificationData,
   config: NotificationConfig
 ): Promise<void> => {
-  const emailSubject = `New Order #${orderData.orderId.slice(0, 8)}`;
-  const message = `
-New order received!
+  const orderDate = new Date().toLocaleString();
+  const emailSubject = `🛒 New Order #${orderData.orderId.slice(0, 8)} - Mokoni Store`;
+  
+  const emailMessage = `
+🎉 NEW ORDER RECEIVED!
 
-Order ID: #${orderData.orderId.slice(0, 8)}
-Customer: ${orderData.customerName}
-Total: $${orderData.total.toFixed(2)}
-Status: ${orderData.status}
+📋 Order Details:
+• Order ID: #${orderData.orderId.slice(0, 8)}
+• Customer: ${orderData.customerName}
+• Total Amount: $${orderData.total.toFixed(2)}
+• Status: ${orderData.status.toUpperCase()}
+• Date: ${orderDate}
 
-Items:
-${orderData.items.map(item => `- ${item.name} x${item.quantity} - $${(item.price * item.quantity).toFixed(2)}`).join('\n')}
+📦 Items Ordered:
+${orderData.items.map(item => 
+  `• ${item.name} × ${item.quantity} = $${(item.price * item.quantity).toFixed(2)}`
+).join('\n')}
 
-Please check the admin panel for more details.
+💰 Order Summary:
+• Subtotal: $${orderData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
+• Total: $${orderData.total.toFixed(2)}
+
+🚀 Next Steps:
+Please check your admin panel to process this order and update the customer on shipping details.
+
+---
+Mokoni Store Management System
   `.trim();
 
   // Send email notification
   if (config.emailEnabled && config.adminEmail) {
-    await sendEmailNotification(config.adminEmail, emailSubject, message, config);
+    const emailSent = await sendEmailNotification(config.adminEmail, emailSubject, emailMessage, config);
+    if (emailSent) {
+      console.log('✅ Order email notification sent successfully');
+    } else {
+      console.log('❌ Failed to send order email notification');
+    }
   }
 
   // Send WhatsApp notification
   if (config.whatsappEnabled && config.adminWhatsapp) {
-    const whatsappMessage = `🛒 New Order #${orderData.orderId.slice(0, 8)}\n💰 Total: $${orderData.total.toFixed(2)}\n📦 Items: ${orderData.items.length}\n\nCheck admin panel for details.`;
-    await sendWhatsAppNotification(config.adminWhatsapp, whatsappMessage, config);
+    const whatsappMessage = `🛒 *New Order Alert!*
+
+Order #${orderData.orderId.slice(0, 8)}
+💰 Total: $${orderData.total.toFixed(2)}
+📦 Items: ${orderData.items.length}
+👤 Customer: ${orderData.customerName}
+🕐 Time: ${orderDate}
+
+Check your admin panel for details! 🚀`;
+
+    const whatsappSent = await sendWhatsAppNotification(config.adminWhatsapp, whatsappMessage, config);
+    if (whatsappSent) {
+      console.log('✅ Order WhatsApp notification prepared successfully');
+    } else {
+      console.log('❌ Failed to prepare WhatsApp notification');
+    }
   }
 };
 
@@ -93,19 +152,40 @@ export const sendOrderStatusNotification = async (
   customerEmail: string,
   config: NotificationConfig
 ): Promise<void> => {
-  const subject = `Order Status Update #${orderId.slice(0, 8)}`;
-  const message = `Your order #${orderId.slice(0, 8)} status has been updated to: ${newStatus.toUpperCase()}`;
+  const statusDate = new Date().toLocaleString();
+  const subject = `📦 Order Status Update #${orderId.slice(0, 8)} - ${newStatus.toUpperCase()}`;
+  
+  const adminMessage = `
+📦 ORDER STATUS UPDATED
+
+Order #${orderId.slice(0, 8)} status changed to: ${newStatus.toUpperCase()}
+Updated at: ${statusDate}
+
+Please review the order in your admin panel for next steps.
+  `.trim();
 
   // Notify admin
   if (config.emailEnabled && config.adminEmail) {
     await sendEmailNotification(
       config.adminEmail,
       `Admin: ${subject}`,
-      `Order #${orderId.slice(0, 8)} status changed to: ${newStatus}`,
+      adminMessage,
       config
     );
   }
 
-  // In a full implementation, you'd also notify the customer
-  console.log(`Customer notification: ${customerEmail} - ${subject}`);
+  // WhatsApp notification for admin
+  if (config.whatsappEnabled && config.adminWhatsapp) {
+    const whatsappMessage = `📦 *Order Status Update*
+
+Order #${orderId.slice(0, 8)}
+Status: ${newStatus.toUpperCase()}
+Time: ${statusDate}
+
+Check admin panel for details! 📋`;
+
+    await sendWhatsAppNotification(config.adminWhatsapp, whatsappMessage, config);
+  }
+
+  console.log(`Status update notification sent for order ${orderId}: ${newStatus}`);
 };

@@ -32,6 +32,10 @@ interface SettingsFormData {
   whatsappEnabled: boolean;
   adminEmail: string;
   adminWhatsapp: string;
+  // EmailJS settings
+  emailjsServiceId: string;
+  emailjsTemplateId: string;
+  emailjsPublicKey: string;
 }
 
 const AdminSettings = () => {
@@ -67,6 +71,9 @@ const AdminSettings = () => {
       setValue('whatsappEnabled', settings.notifications?.whatsappEnabled || false);
       setValue('adminEmail', settings.notifications?.adminEmail || '');
       setValue('adminWhatsapp', settings.notifications?.adminWhatsapp || '');
+      setValue('emailjsServiceId', settings.notifications?.emailjsServiceId || '');
+      setValue('emailjsTemplateId', settings.notifications?.emailjsTemplateId || '');
+      setValue('emailjsPublicKey', settings.notifications?.emailjsPublicKey || '');
     }
   }, [settings, setValue]);
 
@@ -98,6 +105,9 @@ const AdminSettings = () => {
           whatsappEnabled: data.whatsappEnabled,
           adminEmail: data.adminEmail,
           adminWhatsapp: data.adminWhatsapp,
+          emailjsServiceId: data.emailjsServiceId,
+          emailjsTemplateId: data.emailjsTemplateId,
+          emailjsPublicKey: data.emailjsPublicKey,
           twilioAccountSid: '',
           twilioAuthToken: '',
           twilioWhatsappNumber: ''
@@ -313,7 +323,7 @@ const AdminSettings = () => {
           </CardContent>
         </Card>
 
-        {/* Notification Settings */}
+        {/* Enhanced Notification Settings */}
         <Card className="bg-pearl-50 border-olive-200">
           <CardHeader>
             <CardTitle className="text-olive-800 flex items-center">
@@ -321,16 +331,18 @@ const AdminSettings = () => {
               Notification Settings
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="emailEnabled"
-                    {...register('emailEnabled')}
-                  />
-                  <Label htmlFor="emailEnabled">Enable Email Notifications</Label>
-                </div>
+          <CardContent className="space-y-6">
+            {/* Email Settings */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-olive-700">Email Notifications</h3>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="emailEnabled"
+                  {...register('emailEnabled')}
+                />
+                <Label htmlFor="emailEnabled">Enable Email Notifications</Label>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="adminEmail">Admin Email for Notifications</Label>
                   <Input
@@ -340,23 +352,53 @@ const AdminSettings = () => {
                     placeholder="admin@yoursite.com"
                   />
                 </div>
-              </div>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="whatsappEnabled"
-                    {...register('whatsappEnabled')}
+                <div>
+                  <Label htmlFor="emailjsServiceId">EmailJS Service ID</Label>
+                  <Input
+                    id="emailjsServiceId"
+                    {...register('emailjsServiceId')}
+                    placeholder="service_xxxxxxx"
                   />
-                  <Label htmlFor="whatsappEnabled">Enable WhatsApp Notifications</Label>
                 </div>
                 <div>
-                  <Label htmlFor="adminWhatsapp">Admin WhatsApp Number</Label>
+                  <Label htmlFor="emailjsTemplateId">EmailJS Template ID</Label>
                   <Input
-                    id="adminWhatsapp"
-                    {...register('adminWhatsapp')}
-                    placeholder="+1234567890"
+                    id="emailjsTemplateId"
+                    {...register('emailjsTemplateId')}
+                    placeholder="template_xxxxxxx"
                   />
                 </div>
+                <div>
+                  <Label htmlFor="emailjsPublicKey">EmailJS Public Key</Label>
+                  <Input
+                    id="emailjsPublicKey"
+                    {...register('emailjsPublicKey')}
+                    placeholder="xxxxxxxxxxxxxxxx"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* WhatsApp Settings */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-olive-700">WhatsApp Notifications</h3>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="whatsappEnabled"
+                  {...register('whatsappEnabled')}
+                />
+                <Label htmlFor="whatsappEnabled">Enable WhatsApp Notifications</Label>
+              </div>
+              <div>
+                <Label htmlFor="adminWhatsapp">Admin WhatsApp Number</Label>
+                <Input
+                  id="adminWhatsapp"
+                  {...register('adminWhatsapp')}
+                  placeholder="+1234567890"
+                />
+                <p className="text-sm text-olive-600 mt-1">
+                  Include country code (e.g., +1234567890)
+                </p>
               </div>
             </div>
           </CardContent>
