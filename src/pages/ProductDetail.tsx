@@ -1,14 +1,12 @@
 
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Star, ShoppingCart, ArrowLeft, Upload, Camera } from 'lucide-react';
+import { Star, ShoppingCart, ArrowLeft } from 'lucide-react';
 import { useProduct } from '@/hooks/useProducts';
 import { useCart } from '@/hooks/useCart';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
@@ -18,40 +16,23 @@ const ProductDetail = () => {
   const { data: product, isLoading } = useProduct(id!);
   const { addItem } = useCart();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState(0);
-  const [customImages, setCustomImages] = useState<string[]>([]);
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (files) {
-      Array.from(files).forEach(file => {
-        if (file.type.startsWith('image/')) {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            if (e.target?.result) {
-              setCustomImages(prev => [...prev, e.target!.result as string]);
-            }
-          };
-          reader.readAsDataURL(file);
-        }
-      });
-    }
-  };
 
   const handleAddToCart = () => {
     if (product) {
       addItem(product.id, 1);
+      toast({
+        title: "Added to cart",
+        description: `${product.name} has been added to your cart.`,
+      });
     }
   };
 
   const handleBuyNow = () => {
     if (product) {
-      addItem(product.id, 1);
-      toast({
-        title: "Added to cart",
-        description: "Redirecting to checkout...",
-      });
-      // In a real app, you'd redirect to checkout
+      // Navigate directly to checkout with this product
+      navigate('/checkout', { state: { product } });
     }
   };
 
@@ -85,8 +66,6 @@ const ProductDetail = () => {
     );
   }
 
-  const allImages = [...product.images, ...customImages];
-
   return (
     <div className="min-h-screen bg-pearl-50">
       <Navbar />
@@ -104,7 +83,7 @@ const ProductDetail = () => {
             <Card className="overflow-hidden">
               <CardContent className="p-0">
                 <img 
-                  src={allImages[selectedImage] || "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=600&h=400&fit=crop"} 
+                  src={product.images[selectedImage] || "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=600&h=400&fit=crop"} 
                   alt={product.name}
                   className="w-full h-96 object-cover"
                 />
@@ -112,9 +91,9 @@ const ProductDetail = () => {
             </Card>
             
             {/* Image Thumbnails */}
-            {allImages.length > 1 && (
+            {product.images.length > 1 && (
               <div className="grid grid-cols-4 gap-2">
-                {allImages.map((image, index) => (
+                {product.images.map((image, index) => (
                   <img 
                     key={index}
                     src={image} 
@@ -127,47 +106,6 @@ const ProductDetail = () => {
                 ))}
               </div>
             )}
-
-            {/* Photo Upload Section */}
-            <Card className="bg-pearl-100 border-olive-200">
-              <CardContent className="p-4">
-                <Label htmlFor="photo-upload" className="text-olive-800 font-semibold mb-2 block">
-                  Upload Your Photos
-                </Label>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      id="photo-upload"
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={handleFileUpload}
-                      className="hidden"
-                    />
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => document.getElementById('photo-upload')?.click()}
-                      className="flex-1 border-olive-300"
-                    >
-                      <Upload className="mr-2 h-4 w-4" />
-                      Upload from Device
-                    </Button>
-                    <Button 
-                      type="button" 
-                      variant="outline"
-                      onClick={() => document.getElementById('photo-upload')?.click()}
-                      className="border-olive-300"
-                    >
-                      <Camera className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <p className="text-sm text-olive-600">
-                    Supports: JPG, PNG, GIF, WebP, and more
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Product Info Section */}
@@ -194,13 +132,25 @@ const ProductDetail = () => {
 
               <div className="flex items-center space-x-4 mb-6">
                 <span className="text-3xl font-bold text-olive-800">
-                  ${typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
+                  ₹{typeof product.price === 'number' ? product.price.toFixed(2) : '0.00'}
                 </span>
                 {product.originalPrice && (
                   <span className="text-xl text-gray-500 line-through">
-                    ${typeof product.originalPrice === 'number' ? product.originalPrice.toFixed(2) : '0.00'}
+                    ₹{typeof product.originalPrice === 'number' ? product.originalPrice.toFixed(2) : '0.00'}
                   </span>
                 )}
+              </div>
+
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-green-800">
+                  ✓ Free shipping on orders above ₹500
+                </p>
+                <p className="text-sm text-green-800">
+                  ✓ Cash on Delivery available
+                </p>
+                <p className="text-sm text-green-800">
+                  ✓ 7-day return policy
+                </p>
               </div>
             </div>
 

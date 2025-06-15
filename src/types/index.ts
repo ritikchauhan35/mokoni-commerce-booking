@@ -74,7 +74,7 @@ export interface Order {
   status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   shippingAddress: Address;
   billingAddress?: Address;
-  paymentMethod: 'cash_on_delivery' | 'card' | 'paypal' | { type: string; last4?: string };
+  paymentMethod: 'cash_on_delivery' | 'card' | 'paypal' | 'upi' | { type: string; last4?: string; upiId?: string };
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
   trackingNumber?: string;
   estimatedDelivery?: Date;

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCart } from '@/hooks/useCart';
@@ -15,7 +16,7 @@ import { createOrder } from '@/services';
 import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { ShoppingBag, CreditCard, Truck } from 'lucide-react';
+import { ShoppingBag, CreditCard, Truck, Wallet, Banknote } from 'lucide-react';
 
 interface CheckoutFormData {
   email: string;
@@ -26,10 +27,12 @@ interface CheckoutFormData {
   state: string;
   zipCode: string;
   phone: string;
-  cardNumber: string;
-  expiryDate: string;
-  cvv: string;
-  cardName: string;
+  paymentMethod: 'cod' | 'card' | 'upi';
+  cardNumber?: string;
+  expiryDate?: string;
+  cvv?: string;
+  cardName?: string;
+  upiId?: string;
 }
 
 const Checkout = () => {
@@ -45,7 +48,7 @@ const Checkout = () => {
   const checkoutItem = location.state?.product;
   const isDirectPurchase = !!checkoutItem;
 
-  const { register, handleSubmit, formState: { errors } } = useForm<CheckoutFormData>({
+  const { register, handleSubmit, watch, formState: { errors } } = useForm<CheckoutFormData>({
     defaultValues: {
       email: user?.email || '',
       firstName: '',
@@ -55,12 +58,16 @@ const Checkout = () => {
       state: '',
       zipCode: '',
       phone: '',
+      paymentMethod: 'cod',
       cardNumber: '',
       expiryDate: '',
       cvv: '',
       cardName: '',
+      upiId: '',
     }
   });
+
+  const paymentMethod = watch('paymentMethod');
 
   const getCheckoutItems = () => {
     if (isDirectPurchase) {
@@ -84,9 +91,10 @@ const Checkout = () => {
     return total + (item.product!.price * item.quantity);
   }, 0);
 
-  const tax = subtotal * 0.1;
-  const shipping = subtotal > 50 ? 0 : 9.99;
-  const total = subtotal + tax + shipping;
+  const gst = subtotal * 0.18; // 18% GST for India
+  const shipping = subtotal > 500 ? 0 : 50; // Free shipping above ₹500
+  const codCharges = paymentMethod === 'cod' ? 25 : 0; // ₹25 COD charges
+  const total = subtotal + gst + shipping + codCharges;
 
   const onSubmit = async (data: CheckoutFormData) => {
     setIsProcessing(true);
@@ -101,21 +109,22 @@ const Checkout = () => {
         })),
         total,
         subtotal,
-        tax,
+        tax: gst,
         shipping,
         status: 'pending' as const,
-        paymentStatus: 'pending' as const,
+        paymentStatus: data.paymentMethod === 'cod' ? 'pending' : 'pending',
         shippingAddress: {
           street: data.address,
           city: data.city,
           state: data.state,
           zipCode: data.zipCode,
-          country: 'US'
+          country: 'IN'
         },
-        paymentMethod: {
-          type: 'card',
-          last4: data.cardNumber.slice(-4)
-        },
+        paymentMethod: data.paymentMethod === 'cod' 
+          ? 'cash_on_delivery' 
+          : data.paymentMethod === 'upi' 
+            ? { type: 'upi', upiId: data.upiId } 
+            : { type: 'card', last4: data.cardNumber?.slice(-4) },
         createdAt: new Date()
       };
 
@@ -206,7 +215,7 @@ const Checkout = () => {
                       <Input
                         id="firstName"
                         {...register('firstName', { required: 'First name is required' })}
-                        placeholder="John"
+                        placeholder="राज / Raj"
                       />
                       {errors.firstName && <p className="text-red-500 text-sm">{errors.firstName.message}</p>}
                     </div>
@@ -215,7 +224,7 @@ const Checkout = () => {
                       <Input
                         id="lastName"
                         {...register('lastName', { required: 'Last name is required' })}
-                        placeholder="Doe"
+                        placeholder="शर्मा / Sharma"
                       />
                       {errors.lastName && <p className="text-red-500 text-sm">{errors.lastName.message}</p>}
                     </div>
@@ -225,7 +234,7 @@ const Checkout = () => {
                     <Input
                       id="address"
                       {...register('address', { required: 'Address is required' })}
-                      placeholder="123 Main St"
+                      placeholder="House No, Street, Locality"
                     />
                     {errors.address && <p className="text-red-500 text-sm">{errors.address.message}</p>}
                   </div>
@@ -235,7 +244,7 @@ const Checkout = () => {
                       <Input
                         id="city"
                         {...register('city', { required: 'City is required' })}
-                        placeholder="New York"
+                        placeholder="Mumbai"
                       />
                       {errors.city && <p className="text-red-500 text-sm">{errors.city.message}</p>}
                     </div>
@@ -244,16 +253,16 @@ const Checkout = () => {
                       <Input
                         id="state"
                         {...register('state', { required: 'State is required' })}
-                        placeholder="NY"
+                        placeholder="Maharashtra"
                       />
                       {errors.state && <p className="text-red-500 text-sm">{errors.state.message}</p>}
                     </div>
                     <div>
-                      <Label htmlFor="zipCode">ZIP Code</Label>
+                      <Label htmlFor="zipCode">PIN Code</Label>
                       <Input
                         id="zipCode"
-                        {...register('zipCode', { required: 'ZIP code is required' })}
-                        placeholder="10001"
+                        {...register('zipCode', { required: 'PIN code is required' })}
+                        placeholder="400001"
                       />
                       {errors.zipCode && <p className="text-red-500 text-sm">{errors.zipCode.message}</p>}
                     </div>
@@ -263,60 +272,100 @@ const Checkout = () => {
                     <Input
                       id="phone"
                       {...register('phone', { required: 'Phone is required' })}
-                      placeholder="(555) 123-4567"
+                      placeholder="+91 98765 43210"
                     />
                     {errors.phone && <p className="text-red-500 text-sm">{errors.phone.message}</p>}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Payment Information */}
+              {/* Payment Method */}
               <Card className="bg-pearl-100 border-olive-200">
                 <CardHeader>
                   <CardTitle className="text-olive-800 flex items-center">
-                    <CreditCard className="mr-2 h-5 w-5" />
-                    Payment Information
+                    <Wallet className="mr-2 h-5 w-5" />
+                    Payment Method
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
-                    <Label htmlFor="cardName">Name on Card</Label>
-                    <Input
-                      id="cardName"
-                      {...register('cardName', { required: 'Name on card is required' })}
-                      placeholder="John Doe"
-                    />
-                    {errors.cardName && <p className="text-red-500 text-sm">{errors.cardName.message}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="cardNumber">Card Number</Label>
-                    <Input
-                      id="cardNumber"
-                      {...register('cardNumber', { required: 'Card number is required' })}
-                      placeholder="1234 5678 9012 3456"
-                    />
-                    {errors.cardNumber && <p className="text-red-500 text-sm">{errors.cardNumber.message}</p>}
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="expiryDate">Expiry Date</Label>
-                      <Input
-                        id="expiryDate"
-                        {...register('expiryDate', { required: 'Expiry date is required' })}
-                        placeholder="MM/YY"
-                      />
-                      {errors.expiryDate && <p className="text-red-500 text-sm">{errors.expiryDate.message}</p>}
+                  <RadioGroup {...register('paymentMethod')} defaultValue="cod" className="space-y-3">
+                    <div className="flex items-center space-x-2 p-3 border rounded-lg">
+                      <RadioGroupItem value="cod" id="cod" />
+                      <Label htmlFor="cod" className="flex items-center cursor-pointer">
+                        <Banknote className="mr-2 h-4 w-4" />
+                        Cash on Delivery (COD) - ₹25 charges
+                      </Label>
                     </div>
-                    <div>
-                      <Label htmlFor="cvv">CVV</Label>
-                      <Input
-                        id="cvv"
-                        {...register('cvv', { required: 'CVV is required' })}
-                        placeholder="123"
-                      />
-                      {errors.cvv && <p className="text-red-500 text-sm">{errors.cvv.message}</p>}
+                    <div className="flex items-center space-x-2 p-3 border rounded-lg">
+                      <RadioGroupItem value="upi" id="upi" />
+                      <Label htmlFor="upi" className="flex items-center cursor-pointer">
+                        <Wallet className="mr-2 h-4 w-4" />
+                        UPI Payment
+                      </Label>
                     </div>
-                  </div>
+                    <div className="flex items-center space-x-2 p-3 border rounded-lg">
+                      <RadioGroupItem value="card" id="card" />
+                      <Label htmlFor="card" className="flex items-center cursor-pointer">
+                        <CreditCard className="mr-2 h-4 w-4" />
+                        Credit/Debit Card
+                      </Label>
+                    </div>
+                  </RadioGroup>
+
+                  {paymentMethod === 'upi' && (
+                    <div>
+                      <Label htmlFor="upiId">UPI ID</Label>
+                      <Input
+                        id="upiId"
+                        {...register('upiId', { required: paymentMethod === 'upi' ? 'UPI ID is required' : false })}
+                        placeholder="yourname@paytm"
+                      />
+                      {errors.upiId && <p className="text-red-500 text-sm">{errors.upiId.message}</p>}
+                    </div>
+                  )}
+
+                  {paymentMethod === 'card' && (
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="cardName">Name on Card</Label>
+                        <Input
+                          id="cardName"
+                          {...register('cardName', { required: paymentMethod === 'card' ? 'Name on card is required' : false })}
+                          placeholder="John Doe"
+                        />
+                        {errors.cardName && <p className="text-red-500 text-sm">{errors.cardName.message}</p>}
+                      </div>
+                      <div>
+                        <Label htmlFor="cardNumber">Card Number</Label>
+                        <Input
+                          id="cardNumber"
+                          {...register('cardNumber', { required: paymentMethod === 'card' ? 'Card number is required' : false })}
+                          placeholder="1234 5678 9012 3456"
+                        />
+                        {errors.cardNumber && <p className="text-red-500 text-sm">{errors.cardNumber.message}</p>}
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="expiryDate">Expiry Date</Label>
+                          <Input
+                            id="expiryDate"
+                            {...register('expiryDate', { required: paymentMethod === 'card' ? 'Expiry date is required' : false })}
+                            placeholder="MM/YY"
+                          />
+                          {errors.expiryDate && <p className="text-red-500 text-sm">{errors.expiryDate.message}</p>}
+                        </div>
+                        <div>
+                          <Label htmlFor="cvv">CVV</Label>
+                          <Input
+                            id="cvv"
+                            {...register('cvv', { required: paymentMethod === 'card' ? 'CVV is required' : false })}
+                            placeholder="123"
+                          />
+                          {errors.cvv && <p className="text-red-500 text-sm">{errors.cvv.message}</p>}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -325,7 +374,7 @@ const Checkout = () => {
                 className="w-full bg-olive-600 hover:bg-olive-700 py-3 text-lg"
                 disabled={isProcessing}
               >
-                {isProcessing ? 'Processing...' : `Place Order - $${total.toFixed(2)}`}
+                {isProcessing ? 'Processing...' : `Place Order - ₹${total.toFixed(2)}`}
               </Button>
             </form>
           </div>
@@ -351,7 +400,7 @@ const Checkout = () => {
                         <p className="text-xs text-olive-600">Qty: {item.quantity}</p>
                       </div>
                       <p className="text-sm font-bold text-olive-800">
-                        ${(item.product!.price * item.quantity).toFixed(2)}
+                        ₹{(item.product!.price * item.quantity).toFixed(2)}
                       </p>
                     </div>
                   ))}
@@ -363,22 +412,28 @@ const Checkout = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-olive-700">Subtotal</span>
-                    <span className="text-olive-800">${subtotal.toFixed(2)}</span>
+                    <span className="text-olive-800">₹{subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-olive-700">Tax</span>
-                    <span className="text-olive-800">${tax.toFixed(2)}</span>
+                    <span className="text-olive-700">GST (18%)</span>
+                    <span className="text-olive-800">₹{gst.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-olive-700">Shipping</span>
                     <span className="text-olive-800">
-                      {shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}
+                      {shipping === 0 ? 'Free' : `₹${shipping.toFixed(2)}`}
                     </span>
                   </div>
+                  {codCharges > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-olive-700">COD Charges</span>
+                      <span className="text-olive-800">₹{codCharges.toFixed(2)}</span>
+                    </div>
+                  )}
                   <Separator />
                   <div className="flex justify-between font-bold text-lg">
                     <span className="text-olive-800">Total</span>
-                    <span className="text-olive-800">${total.toFixed(2)}</span>
+                    <span className="text-olive-800">₹{total.toFixed(2)}</span>
                   </div>
                 </div>
               </CardContent>
