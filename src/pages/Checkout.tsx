@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -86,7 +87,7 @@ const Checkout = () => {
 
   const checkoutItems = getCheckoutItems();
   
-  // Calculate subtotal correctly - fix the reduce function
+  // Calculate subtotal correctly - fix the reduce function with proper initial value
   const subtotal = checkoutItems.reduce((total: number, item) => {
     return total + (item.product!.price * item.quantity);
   }, 0);
