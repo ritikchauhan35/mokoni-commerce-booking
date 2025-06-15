@@ -1,4 +1,3 @@
-
 import { 
   doc, 
   getDoc, 
@@ -7,11 +6,10 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { SiteSettings } from '@/types';
-import { NotificationConfig } from '@/types/notifications';
 
 const SETTINGS_DOC_ID = 'site-settings';
 
-const defaultSettings: SiteSettings & { notifications: NotificationConfig } = {
+const defaultSettings: SiteSettings = {
   id: SETTINGS_DOC_ID,
   siteName: 'Mokoni',
   siteDescription: 'Your trusted marketplace for premium products and unique experiences',

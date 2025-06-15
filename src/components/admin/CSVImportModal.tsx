@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -122,6 +121,14 @@ const CSVImportModal: React.FC<CSVImportModalProps> = ({ isOpen, onClose }) => {
     window.URL.revokeObjectURL(url);
   };
 
+  // Fix the field mapping update function
+  const updateFieldMapping = (header: string, value: string) => {
+    setFieldMapping(prev => ({
+      ...prev,
+      [header]: value as keyof Product | 'ignore'
+    }));
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -183,12 +190,7 @@ const CSVImportModal: React.FC<CSVImportModalProps> = ({ isOpen, onClose }) => {
                       </span>
                       <Select
                         value={fieldMapping[header] || 'ignore'}
-                        onValueChange={(value) =>
-                          setFieldMapping(prev => ({
-                            ...prev,
-                            [header]: value as keyof typeof fieldMapping[string]
-                          }))
-                        }
+                        onValueChange={(value) => updateFieldMapping(header, value)}
                       >
                         <SelectTrigger className="flex-1">
                           <SelectValue />

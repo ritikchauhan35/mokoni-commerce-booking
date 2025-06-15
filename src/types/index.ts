@@ -1,3 +1,4 @@
+import { NotificationConfig } from './notifications';
 
 export interface User {
   id: string;
@@ -210,6 +211,7 @@ export interface SiteSettings {
   taxRate: number;
   currency: string;
   maintenanceMode: boolean;
+  notifications?: NotificationConfig;
   createdAt: Date;
   updatedAt: Date;
 }
