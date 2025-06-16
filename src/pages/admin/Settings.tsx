@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,7 +10,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { getSettings, updateSettings } from '@/services/settings';
 import { useToast } from '@/hooks/use-toast';
-import { Save, MapPin, Mail, Phone, Globe } from 'lucide-react';
+import { Save, MapPin, Mail, Phone, Globe, TestTube, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import NotificationTestModal from '@/components/admin/NotificationTestModal';
 
 interface SettingsFormData {
   siteName: string;
@@ -39,6 +41,7 @@ interface SettingsFormData {
 }
 
 const AdminSettings = () => {
+  const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const { data: settings, isLoading } = useQuery({
     queryKey: ['settings'],
     queryFn: getSettings,
@@ -47,6 +50,40 @@ const AdminSettings = () => {
   const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<SettingsFormData>();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Watch notification settings for validation
+  const emailEnabled = watch('emailEnabled');
+  const whatsappEnabled = watch('whatsappEnabled');
+  const emailjsServiceId = watch('emailjsServiceId');
+  const emailjsTemplateId = watch('emailjsTemplateId');
+  const emailjsPublicKey = watch('emailjsPublicKey');
+  const adminEmail = watch('adminEmail');
+  const adminWhatsapp = watch('adminWhatsapp');
+
+  // Configuration validation
+  const getEmailConfigStatus = () => {
+    if (!emailEnabled) return { status: 'disabled', message: 'Email notifications disabled' };
+    if (!adminEmail) return { status: 'error', message: 'Admin email required' };
+    if (!emailjsServiceId || !emailjsTemplateId || !emailjsPublicKey) {
+      return { status: 'warning', message: 'EmailJS configuration incomplete - will use fallback' };
+    }
+    return { status: 'success', message: 'Email notifications fully configured' };
+  };
+
+  const getWhatsAppConfigStatus = () => {
+    if (!whatsappEnabled) return { status: 'disabled', message: 'WhatsApp notifications disabled' };
+    if (!adminWhatsapp) return { status: 'error', message: 'Admin WhatsApp number required' };
+    return { status: 'success', message: 'WhatsApp notifications configured (using wa.me links)' };
+  };
+
+  const StatusIcon = ({ status }: { status: string }) => {
+    switch (status) {
+      case 'success': return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'warning': return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+      case 'error': return <XCircle className="h-4 w-4 text-red-500" />;
+      default: return <XCircle className="h-4 w-4 text-gray-400" />;
+    }
+  };
 
   React.useEffect(() => {
     if (settings) {
@@ -135,6 +172,9 @@ const AdminSettings = () => {
       </div>
     );
   }
+
+  const emailConfigStatus = getEmailConfigStatus();
+  const whatsappConfigStatus = getWhatsAppConfigStatus();
 
   return (
     <div className="space-y-6">
@@ -326,15 +366,33 @@ const AdminSettings = () => {
         {/* Enhanced Notification Settings */}
         <Card className="bg-pearl-50 border-olive-200">
           <CardHeader>
-            <CardTitle className="text-olive-800 flex items-center">
-              <Mail className="mr-2 h-5 w-5" />
-              Notification Settings
+            <CardTitle className="text-olive-800 flex items-center justify-between">
+              <div className="flex items-center">
+                <Mail className="mr-2 h-5 w-5" />
+                Notification Settings
+              </div>
+              <Button
+                type="button"
+                onClick={() => setIsTestModalOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700"
+                size="sm"
+              >
+                <TestTube className="mr-2 h-4 w-4" />
+                Test Notifications
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Email Settings */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-olive-700">Email Notifications</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-olive-700">Email Notifications</h3>
+                <div className="flex items-center space-x-2">
+                  <StatusIcon status={emailConfigStatus.status} />
+                  <span className="text-sm text-gray-600">{emailConfigStatus.message}</span>
+                </div>
+              </div>
+              
               <div className="flex items-center space-x-2">
                 <Switch
                   id="emailEnabled"
@@ -342,6 +400,7 @@ const AdminSettings = () => {
                 />
                 <Label htmlFor="emailEnabled">Enable Email Notifications</Label>
               </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="adminEmail">Admin Email for Notifications</Label>
@@ -377,11 +436,30 @@ const AdminSettings = () => {
                   />
                 </div>
               </div>
+              
+              {emailEnabled && (
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-blue-800 mb-2">EmailJS Setup Instructions:</h4>
+                  <ol className="text-sm text-blue-700 space-y-1 list-decimal list-inside">
+                    <li>Create an account at <a href="https://emailjs.com" target="_blank" rel="noopener noreferrer" className="underline">emailjs.com</a></li>
+                    <li>Create an email service (Gmail, Outlook, etc.)</li>
+                    <li>Create an email template with variables: to_email, subject, message, from_name</li>
+                    <li>Copy the Service ID, Template ID, and Public Key to the fields above</li>
+                  </ol>
+                </div>
+              )}
             </div>
 
             {/* WhatsApp Settings */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-olive-700">WhatsApp Notifications</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-olive-700">WhatsApp Notifications</h3>
+                <div className="flex items-center space-x-2">
+                  <StatusIcon status={whatsappConfigStatus.status} />
+                  <span className="text-sm text-gray-600">{whatsappConfigStatus.message}</span>
+                </div>
+              </div>
+              
               <div className="flex items-center space-x-2">
                 <Switch
                   id="whatsappEnabled"
@@ -389,6 +467,7 @@ const AdminSettings = () => {
                 />
                 <Label htmlFor="whatsappEnabled">Enable WhatsApp Notifications</Label>
               </div>
+              
               <div>
                 <Label htmlFor="adminWhatsapp">Admin WhatsApp Number</Label>
                 <Input
@@ -400,6 +479,17 @@ const AdminSettings = () => {
                   Include country code (e.g., +1234567890)
                 </p>
               </div>
+              
+              {whatsappEnabled && (
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-green-800 mb-2">WhatsApp Setup Notes:</h4>
+                  <ul className="text-sm text-green-700 space-y-1 list-disc list-inside">
+                    <li>Current implementation uses wa.me links for manual message sending</li>
+                    <li>For automated WhatsApp messages, integrate with WhatsApp Business API</li>
+                    <li>Consider using Twilio WhatsApp API for production use</li>
+                  </ul>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -411,6 +501,11 @@ const AdminSettings = () => {
           </Button>
         </div>
       </form>
+
+      <NotificationTestModal 
+        isOpen={isTestModalOpen} 
+        onClose={() => setIsTestModalOpen(false)} 
+      />
     </div>
   );
 };

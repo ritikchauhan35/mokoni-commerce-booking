@@ -17,10 +17,12 @@ export interface BookingNotificationData {
 export const sendBookingConfirmation = async (
   bookingData: BookingNotificationData,
   config: NotificationConfig
-): Promise<void> => {
+): Promise<{ emailResults: any[]; whatsappResult?: any }> => {
   const checkInDate = new Date(bookingData.checkIn).toLocaleDateString();
   const checkOutDate = new Date(bookingData.checkOut).toLocaleDateString();
   const bookingDate = new Date().toLocaleString();
+  
+  const results: { emailResults: any[]; whatsappResult?: any } = { emailResults: [] };
   
   // Customer confirmation email
   const customerSubject = `🏡 Booking Confirmation #${bookingData.bookingId.slice(0, 8)} - ${bookingData.propertyName}`;
@@ -66,14 +68,26 @@ Mokoni Property Management System
 
   // Send customer confirmation
   if (config.emailEnabled && bookingData.customerEmail) {
-    await sendEmailNotification(bookingData.customerEmail, customerSubject, customerMessage, config);
-    console.log('✅ Booking confirmation email sent to customer');
+    const customerResult = await sendEmailNotification(bookingData.customerEmail, customerSubject, customerMessage, config);
+    results.emailResults.push({ type: 'customer', ...customerResult });
+    
+    if (customerResult.success) {
+      console.log('✅ Booking confirmation email sent to customer');
+    } else {
+      console.log('❌ Failed to send customer confirmation:', customerResult.message);
+    }
   }
 
   // Send admin notification
   if (config.emailEnabled && config.adminEmail) {
-    await sendEmailNotification(config.adminEmail, adminSubject, adminMessage, config);
-    console.log('✅ Booking notification email sent to admin');
+    const adminResult = await sendEmailNotification(config.adminEmail, adminSubject, adminMessage, config);
+    results.emailResults.push({ type: 'admin', ...adminResult });
+    
+    if (adminResult.success) {
+      console.log('✅ Booking notification email sent to admin');
+    } else {
+      console.log('❌ Failed to send admin notification:', adminResult.message);
+    }
   }
 
   // WhatsApp notification for admin
@@ -89,22 +103,35 @@ Guest: ${bookingData.customerName}
 
 Check admin panel! 🚀`;
 
-    await sendWhatsAppNotification(config.adminWhatsapp, whatsappMessage, config);
-    console.log('✅ Booking WhatsApp notification prepared');
+    const whatsappResult = await sendWhatsAppNotification(config.adminWhatsapp, whatsappMessage, config);
+    results.whatsappResult = whatsappResult;
+    
+    if (whatsappResult.success) {
+      console.log('✅ Booking WhatsApp notification prepared');
+    } else {
+      console.log('❌ Failed to prepare WhatsApp notification:', whatsappResult.message);
+    }
   }
+
+  return results;
 };
 
 export const sendBookingStatusUpdate = async (
   bookingId: string,
   newStatus: string,
   customerEmail: string,
+  customerName: string,
   propertyName: string,
   config: NotificationConfig
-): Promise<void> => {
+): Promise<{ emailResults: any[]; whatsappResult?: any }> => {
   const statusDate = new Date().toLocaleString();
   const subject = `🏡 Booking Status Update #${bookingId.slice(0, 8)} - ${newStatus.toUpperCase()}`;
   
+  const results: { emailResults: any[]; whatsappResult?: any } = { emailResults: [] };
+  
   const customerMessage = `
+Dear ${customerName || 'Valued Guest'},
+
 Your booking status has been updated:
 
 🏡 Property: ${propertyName}
@@ -113,11 +140,15 @@ Your booking status has been updated:
 🕐 Updated: ${statusDate}
 
 Thank you for choosing Mokoni!
+
+Best regards,
+Mokoni Team
   `.trim();
 
-  // Notify customer
+  // Notify customer if email provided
   if (config.emailEnabled && customerEmail) {
-    await sendEmailNotification(customerEmail, subject, customerMessage, config);
+    const customerResult = await sendEmailNotification(customerEmail, subject, customerMessage, config);
+    results.emailResults.push({ type: 'customer', ...customerResult });
   }
 
   // WhatsApp notification for admin
@@ -126,12 +157,15 @@ Thank you for choosing Mokoni!
 
 #${bookingId.slice(0, 8)} → ${newStatus.toUpperCase()}
 Property: ${propertyName}
+Customer: ${customerName || customerEmail || 'N/A'}
 Time: ${statusDate}
 
 Check admin panel! 📋`;
 
-    await sendWhatsAppNotification(config.adminWhatsapp, adminWhatsappMessage, config);
+    const whatsappResult = await sendWhatsAppNotification(config.adminWhatsapp, adminWhatsappMessage, config);
+    results.whatsappResult = whatsappResult;
   }
 
   console.log(`Booking status update notification sent for ${bookingId}: ${newStatus}`);
+  return results;
 };
