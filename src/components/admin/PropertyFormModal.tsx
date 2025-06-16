@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ interface PropertyFormData {
   name: string;
   description: string;
   price: number;
+  pricePerNight: number;
   location: string;
   guests: number;
   bedrooms: number;
@@ -30,6 +32,8 @@ interface PropertyFormData {
   images: string;
   amenities: string;
   rules?: string;
+  host: string;
+  propertyType: string;
 }
 
 const PropertyFormModal: React.FC<PropertyFormModalProps> = ({ isOpen, onClose, property, mode }) => {
@@ -45,6 +49,7 @@ const PropertyFormModal: React.FC<PropertyFormModalProps> = ({ isOpen, onClose, 
       setValue('name', property.name);
       setValue('description', property.description);
       setValue('price', property.price);
+      setValue('pricePerNight', property.pricePerNight);
       setValue('location', property.location);
       setValue('guests', property.guests);
       setValue('bedrooms', property.bedrooms);
@@ -52,6 +57,8 @@ const PropertyFormModal: React.FC<PropertyFormModalProps> = ({ isOpen, onClose, 
       setValue('images', property.images.join(', '));
       setValue('amenities', property.amenities.join(', '));
       setValue('rules', property.rules?.join(', '));
+      setValue('host', property.host);
+      setValue('propertyType', property.propertyType);
       
       // Detect if images are URLs or base64
       const hasBase64 = property.images.some(img => img.startsWith('data:'));
@@ -75,9 +82,11 @@ const PropertyFormModal: React.FC<PropertyFormModalProps> = ({ isOpen, onClose, 
 
   const onSubmit = async (data: PropertyFormData) => {
     try {
+      const images = data.images.split(',').map(img => img.trim()).filter(img => img);
       const propertyData = {
         ...data,
-        images: data.images.split(',').map(img => img.trim()).filter(img => img),
+        images,
+        imageUrl: images[0] || '', // Use first image as main imageUrl
         amenities: data.amenities.split(',').map(amenity => amenity.trim()).filter(amenity => amenity),
         rules: data.rules ? data.rules.split(',').map(rule => rule.trim()).filter(rule => rule) : [],
         rating: property?.rating || 0,
@@ -140,6 +149,27 @@ const PropertyFormModal: React.FC<PropertyFormModalProps> = ({ isOpen, onClose, 
             </div>
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="host">Host Name</Label>
+              <Input
+                id="host"
+                {...register('host', { required: 'Host name is required' })}
+                placeholder="Enter host name"
+              />
+              {errors.host && <p className="text-red-500 text-sm">{errors.host.message}</p>}
+            </div>
+            <div>
+              <Label htmlFor="propertyType">Property Type</Label>
+              <Input
+                id="propertyType"
+                {...register('propertyType', { required: 'Property type is required' })}
+                placeholder="e.g., Apartment, House, Villa"
+              />
+              {errors.propertyType && <p className="text-red-500 text-sm">{errors.propertyType.message}</p>}
+            </div>
+          </div>
+
           <div>
             <Label htmlFor="description">Description</Label>
             <Textarea
@@ -151,9 +181,9 @@ const PropertyFormModal: React.FC<PropertyFormModalProps> = ({ isOpen, onClose, 
             {errors.description && <p className="text-red-500 text-sm">{errors.description.message}</p>}
           </div>
 
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-5 gap-4">
             <div>
-              <Label htmlFor="price">Price/night ($)</Label>
+              <Label htmlFor="price">Price ($)</Label>
               <Input
                 id="price"
                 type="number"
@@ -162,6 +192,17 @@ const PropertyFormModal: React.FC<PropertyFormModalProps> = ({ isOpen, onClose, 
                 placeholder="0.00"
               />
               {errors.price && <p className="text-red-500 text-sm">{errors.price.message}</p>}
+            </div>
+            <div>
+              <Label htmlFor="pricePerNight">Price/night ($)</Label>
+              <Input
+                id="pricePerNight"
+                type="number"
+                step="0.01"
+                {...register('pricePerNight', { required: 'Price per night is required', min: 0 })}
+                placeholder="0.00"
+              />
+              {errors.pricePerNight && <p className="text-red-500 text-sm">{errors.pricePerNight.message}</p>}
             </div>
             <div>
               <Label htmlFor="guests">Guests</Label>
