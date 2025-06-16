@@ -34,7 +34,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
+  console.log('useAuth called, context:', context ? 'available' : 'undefined');
   if (!context) {
+    console.error('useAuth must be used within an AuthProvider');
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
@@ -45,11 +47,13 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  console.log('AuthProvider rendering');
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('AuthProvider useEffect setting up auth listener');
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       console.log('Auth state changed:', firebaseUser?.uid);
       setUser(firebaseUser);
@@ -113,7 +117,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isAdmin = userProfile?.role === 'admin' || userProfile?.role === 'super_admin';
   const isSuperAdmin = userProfile?.role === 'super_admin';
 
-  console.log('Current auth state:', { user: user?.uid, userProfile, isAdmin, isSuperAdmin });
+  console.log('Current auth state:', { user: user?.uid, userProfile, isAdmin, isSuperAdmin, loading });
 
   const value = {
     user,
@@ -125,6 +129,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout
   };
+
+  console.log('AuthProvider providing value:', value);
 
   return (
     <AuthContext.Provider value={value}>
