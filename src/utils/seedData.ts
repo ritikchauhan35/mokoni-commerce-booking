@@ -1,4 +1,3 @@
-
 import { collection, addDoc, getDocs, deleteDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { Product, Property } from '@/types';
@@ -104,10 +103,12 @@ const sampleProperties: Omit<Property, 'id' | 'createdAt'>[] = [
     name: "Luxury Mountain Lodge",
     description: "Breathtaking mountain views with modern amenities, perfect for family getaways and romantic retreats.",
     price: 189,
+    pricePerNight: 189,
     location: "Aspen, Colorado",
     guests: 8,
     bedrooms: 4,
     images: ["https://images.unsplash.com/photo-1472396961693-142e6e269027?w=400&h=300&fit=crop"],
+    imageUrl: "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=400&h=300&fit=crop",
     rating: 4.9,
     reviews: 78,
     amenities: ["WiFi", "Hot Tub", "Fireplace", "Kitchen", "Parking", "Mountain View"],
@@ -116,16 +117,20 @@ const sampleProperties: Omit<Property, 'id' | 'createdAt'>[] = [
       new Date('2024-07-15'),
       new Date('2024-08-01'),
       new Date('2024-08-15')
-    ]
+    ],
+    host: "Mountain Lodge Properties",
+    propertyType: "Lodge"
   },
   {
     name: "Cozy Safari Lodge",
     description: "Authentic safari experience with wildlife viewing opportunities and luxury accommodations.",
     price: 145,
+    pricePerNight: 145,
     location: "Serengeti, Tanzania",
     guests: 6,
     bedrooms: 3,
     images: ["https://images.unsplash.com/photo-1466721591366-2d5fba72006d?w=400&h=300&fit=crop"],
+    imageUrl: "https://images.unsplash.com/photo-1466721591366-2d5fba72006d?w=400&h=300&fit=crop",
     rating: 4.7,
     reviews: 124,
     amenities: ["WiFi", "Game Drives", "Restaurant", "Bar", "Pool", "Wildlife View"],
@@ -134,16 +139,20 @@ const sampleProperties: Omit<Property, 'id' | 'createdAt'>[] = [
       new Date('2024-07-10'),
       new Date('2024-09-05'),
       new Date('2024-10-12')
-    ]
+    ],
+    host: "Safari Adventures Co",
+    propertyType: "Lodge"
   },
   {
     name: "Highland Retreat",
     description: "Secluded highland property with stunning landscapes and traditional Scottish charm.",
     price: 220,
+    pricePerNight: 220,
     location: "Scottish Highlands",
     guests: 10,
     bedrooms: 5,
     images: ["https://images.unsplash.com/photo-1493962853295-0fd70327578a?w=400&h=300&fit=crop"],
+    imageUrl: "https://images.unsplash.com/photo-1493962853295-0fd70327578a?w=400&h=300&fit=crop",
     rating: 4.8,
     reviews: 56,
     amenities: ["WiFi", "Fireplace", "Kitchen", "Hiking Trails", "Garden", "Highland View"],
@@ -152,16 +161,20 @@ const sampleProperties: Omit<Property, 'id' | 'createdAt'>[] = [
       new Date('2024-09-15'),
       new Date('2024-10-01'),
       new Date('2024-11-10')
-    ]
+    ],
+    host: "Highland Escapes",
+    propertyType: "Retreat"
   },
   {
     name: "Forest Cabin Escape",
     description: "Peaceful forest cabin surrounded by nature, ideal for digital detox and relaxation.",
     price: 95,
+    pricePerNight: 95,
     location: "Pacific Northwest",
     guests: 4,
     bedrooms: 2,
     images: ["https://images.unsplash.com/photo-1439886183900-e79ec0057170?w=400&h=300&fit=crop"],
+    imageUrl: "https://images.unsplash.com/photo-1439886183900-e79ec0057170?w=400&h=300&fit=crop",
     rating: 4.6,
     reviews: 89,
     amenities: ["WiFi", "Fireplace", "Kitchen", "Hiking", "Forest View", "Hot Tub"],
@@ -170,16 +183,20 @@ const sampleProperties: Omit<Property, 'id' | 'createdAt'>[] = [
       new Date('2024-07-01'),
       new Date('2024-08-10'),
       new Date('2024-09-20')
-    ]
+    ],
+    host: "Forest Retreats LLC",
+    propertyType: "Cabin"
   },
   {
     name: "Beachfront Villa Paradise",
     description: "Luxurious beachfront villa with private beach access and panoramic ocean views.",
     price: 350,
+    pricePerNight: 350,
     location: "Malibu, California",
     guests: 12,
     bedrooms: 6,
     images: ["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&h=300&fit=crop"],
+    imageUrl: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&h=300&fit=crop",
     rating: 5.0,
     reviews: 167,
     amenities: ["WiFi", "Private Beach", "Pool", "Kitchen", "Ocean View", "Hot Tub"],
@@ -188,16 +205,20 @@ const sampleProperties: Omit<Property, 'id' | 'createdAt'>[] = [
       new Date('2024-08-12'),
       new Date('2024-09-08'),
       new Date('2024-10-20')
-    ]
+    ],
+    host: "Luxury Beach Rentals",
+    propertyType: "Villa"
   },
   {
     name: "Urban Loft Downtown",
     description: "Modern loft in the heart of the city with stylish decor and convenient location.",
     price: 125,
+    pricePerNight: 125,
     location: "New York City, NY",
     guests: 4,
     bedrooms: 2,
     images: ["https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop"],
+    imageUrl: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop",
     rating: 4.4,
     reviews: 203,
     amenities: ["WiFi", "Kitchen", "City View", "Gym Access", "Parking", "Rooftop"],
@@ -206,7 +227,9 @@ const sampleProperties: Omit<Property, 'id' | 'createdAt'>[] = [
       new Date('2024-07-20'),
       new Date('2024-08-30'),
       new Date('2024-09-25')
-    ]
+    ],
+    host: "Urban Stay Properties",
+    propertyType: "Loft"
   }
 ];
 
