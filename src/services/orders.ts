@@ -99,7 +99,13 @@ export const updateOrderStatus = async (orderId: string, status: Order['status']
   try {
     const settings = await getSettings();
     if (settings.notifications) {
-      await sendOrderStatusNotification(orderId, status, '', settings.notifications);
+      await sendOrderStatusNotification(
+        orderId, 
+        status, 
+        '', // customerEmail - In real app, you'd get customer email from order data
+        '', // customerName - In real app, you'd get customer name from order data
+        settings.notifications
+      );
     }
   } catch (error) {
     console.error('Failed to send status update notification:', error);

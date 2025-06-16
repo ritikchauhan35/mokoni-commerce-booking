@@ -86,8 +86,9 @@ export const updateBookingStatus = async (bookingId: string, status: Booking['st
       await sendBookingStatusUpdate(
         bookingId, 
         status, 
-        '', // In real app, you'd get customer email
-        '', // In real app, you'd get property name
+        '', // customerEmail - In real app, you'd get customer email from booking data
+        '', // customerName - In real app, you'd get customer name from booking data
+        '', // propertyName - In real app, you'd get property name from booking data
         settings.notifications
       );
     }
