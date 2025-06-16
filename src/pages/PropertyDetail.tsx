@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -11,7 +12,6 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Slider } from "@/components/ui/slider"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "@/components/ui/use-toast"
@@ -25,8 +25,8 @@ const PropertyDetail = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isBooking, setIsBooking] = useState(false);
-  const [checkInDate, setCheckInDate] = useState<string | undefined>('');
-  const [checkOutDate, setCheckOutDate] = useState<string | undefined>('');
+  const [checkInDate, setCheckInDate] = useState<string>('');
+  const [checkOutDate, setCheckOutDate] = useState<string>('');
   const [guests, setGuests] = useState(1);
 
   const { data: property, isLoading, isError } = useQuery({
@@ -64,7 +64,10 @@ const PropertyDetail = () => {
     }
 
     if (!property || !checkInDate || !checkOutDate || guests < 1) {
-      toast.error('Please fill in all booking details');
+      toast({
+        title: 'Please fill in all booking details',
+        variant: 'destructive'
+      });
       return;
     }
 
@@ -73,11 +76,16 @@ const PropertyDetail = () => {
       const bookingData: Omit<Booking, 'id'> = {
         userId: user.uid,
         propertyId: property.id,
-        checkIn: checkInDate,
-        checkOut: checkOutDate,
+        checkIn: new Date(checkInDate),
+        checkOut: new Date(checkOutDate),
         guests,
         total: calculateTotal(),
+        subtotal: calculateTotal(),
+        tax: 0,
+        cleaningFee: 0,
+        serviceFee: 0,
         status: 'pending',
+        paymentStatus: 'pending',
         guestDetails: {
           name: user.displayName || '',
           email: user.email || '',
@@ -87,11 +95,16 @@ const PropertyDetail = () => {
       };
 
       await createBooking(bookingData);
-      toast.success('Booking created successfully!');
+      toast({
+        title: 'Booking created successfully!',
+      });
       navigate('/booking-confirmation');
     } catch (error) {
       console.error('Booking error:', error);
-      toast.error('Failed to create booking. Please try again.');
+      toast({
+        title: 'Failed to create booking. Please try again.',
+        variant: 'destructive'
+      });
     } finally {
       setIsBooking(false);
     }
@@ -104,7 +117,7 @@ const PropertyDetail = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Property Images */}
           <div>
-            <img src={property.imageUrl} alt={property.name} className="w-full h-auto rounded-lg shadow-md" />
+            <img src={property.imageUrl || property.images[0]} alt={property.name} className="w-full h-auto rounded-lg shadow-md" />
           </div>
 
           {/* Property Details */}
@@ -115,10 +128,10 @@ const PropertyDetail = () => {
                 <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
                 <AvatarFallback>CN</AvatarFallback>
               </Avatar>
-              <span className="text-olive-700 font-medium">Hosted by {property.host}</span>
+              <span className="text-olive-700 font-medium">Hosted by {property.host || 'Host'}</span>
             </div>
             <div className="flex items-center space-x-2 mb-4">
-              <Badge variant="secondary">{property.propertyType}</Badge>
+              <Badge variant="secondary">{property.propertyType || 'Property'}</Badge>
               <Badge variant="outline">{property.location}</Badge>
             </div>
             <p className="text-olive-700 mb-6">{property.description}</p>

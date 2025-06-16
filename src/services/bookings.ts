@@ -32,6 +32,8 @@ export const getUserBookings = async (userId: string): Promise<Booking[]> => {
 export const createBooking = async (booking: Omit<Booking, 'id'>) => {
   const bookingData = {
     ...booking,
+    checkIn: booking.checkIn instanceof Date ? booking.checkIn.toISOString().split('T')[0] : booking.checkIn,
+    checkOut: booking.checkOut instanceof Date ? booking.checkOut.toISOString().split('T')[0] : booking.checkOut,
     createdAt: serverTimestamp(),
     bookingNumber: generateBookingNumber()
   };
@@ -44,11 +46,11 @@ export const createBooking = async (booking: Omit<Booking, 'id'>) => {
     if (settings?.notifications) {
       await sendBookingConfirmation({
         bookingId: bookingRef.id,
-        propertyName: booking.propertyId, // In real app, you'd get actual property name
+        propertyName: booking.propertyId,
         customerName: booking.guestDetails.name,
         customerEmail: booking.guestDetails.email,
-        checkIn: booking.checkIn, // Keep as string
-        checkOut: booking.checkOut, // Keep as string
+        checkIn: typeof booking.checkIn === 'string' ? booking.checkIn : booking.checkIn.toISOString().split('T')[0],
+        checkOut: typeof booking.checkOut === 'string' ? booking.checkOut : booking.checkOut.toISOString().split('T')[0],
         guests: booking.guests,
         total: booking.total,
         status: booking.status

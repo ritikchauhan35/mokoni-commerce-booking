@@ -38,11 +38,13 @@ export interface Property {
   name: string;
   description: string;
   price: number;
+  pricePerNight: number;
   location: string;
   guests: number;
   bedrooms: number;
   bathrooms?: number;
   images: string[];
+  imageUrl: string;
   rating: number;
   reviews: number;
   amenities: string[];
@@ -53,6 +55,8 @@ export interface Property {
     lng: number;
   };
   hostId?: string;
+  host: string;
+  propertyType: string;
   createdAt: Date;
 }
 
