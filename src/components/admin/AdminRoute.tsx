@@ -77,8 +77,8 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
             </p>
           </CardContent>
         </Card>
-      );
-    }
+      </div>
+    );
   }
 };
 
