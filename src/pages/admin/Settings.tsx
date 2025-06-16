@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { getSettings, updateSettings } from '@/services/settings';
 import { useToast } from '@/hooks/use-toast';
 import { Save, MapPin, Mail, Phone, Globe, TestTube, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
@@ -47,7 +47,7 @@ const AdminSettings = () => {
     queryFn: getSettings,
   });
 
-  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<SettingsFormData>();
+  const { register, handleSubmit, formState: { errors }, setValue, watch, control, reset } = useForm<SettingsFormData>();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -87,36 +87,42 @@ const AdminSettings = () => {
 
   React.useEffect(() => {
     if (settings) {
-      setValue('siteName', settings.siteName);
-      setValue('siteDescription', settings.siteDescription);
-      setValue('contactEmail', settings.contactEmail);
-      setValue('contactPhone', settings.contactPhone || '');
-      setValue('street', settings.address?.street || '');
-      setValue('city', settings.address?.city || '');
-      setValue('state', settings.address?.state || '');
-      setValue('zipCode', settings.address?.zipCode || '');
-      setValue('country', settings.address?.country || '');
-      setValue('facebook', settings.socialLinks?.facebook || '');
-      setValue('instagram', settings.socialLinks?.instagram || '');
-      setValue('twitter', settings.socialLinks?.twitter || '');
-      setValue('linkedin', settings.socialLinks?.linkedin || '');
-      setValue('taxRate', settings.taxRate);
-      setValue('maintenanceMode', settings.maintenanceMode);
+      console.log('Populating form with settings:', settings);
+      const formData = {
+        siteName: settings.siteName,
+        siteDescription: settings.siteDescription,
+        contactEmail: settings.contactEmail,
+        contactPhone: settings.contactPhone || '',
+        street: settings.address?.street || '',
+        city: settings.address?.city || '',
+        state: settings.address?.state || '',
+        zipCode: settings.address?.zipCode || '',
+        country: settings.address?.country || '',
+        facebook: settings.socialLinks?.facebook || '',
+        instagram: settings.socialLinks?.instagram || '',
+        twitter: settings.socialLinks?.twitter || '',
+        linkedin: settings.socialLinks?.linkedin || '',
+        taxRate: settings.taxRate,
+        maintenanceMode: settings.maintenanceMode,
+        emailEnabled: settings.notifications?.emailEnabled || false,
+        whatsappEnabled: settings.notifications?.whatsappEnabled || false,
+        adminEmail: settings.notifications?.adminEmail || '',
+        adminWhatsapp: settings.notifications?.adminWhatsapp || '',
+        emailjsServiceId: settings.notifications?.emailjsServiceId || '',
+        emailjsTemplateId: settings.notifications?.emailjsTemplateId || '',
+        emailjsPublicKey: settings.notifications?.emailjsPublicKey || ''
+      };
       
-      // Add notification settings
-      setValue('emailEnabled', settings.notifications?.emailEnabled || false);
-      setValue('whatsappEnabled', settings.notifications?.whatsappEnabled || false);
-      setValue('adminEmail', settings.notifications?.adminEmail || '');
-      setValue('adminWhatsapp', settings.notifications?.adminWhatsapp || '');
-      setValue('emailjsServiceId', settings.notifications?.emailjsServiceId || '');
-      setValue('emailjsTemplateId', settings.notifications?.emailjsTemplateId || '');
-      setValue('emailjsPublicKey', settings.notifications?.emailjsPublicKey || '');
+      console.log('Form data to set:', formData);
+      reset(formData);
     }
-  }, [settings, setValue]);
+  }, [settings, reset]);
 
   const onSubmit = async (data: SettingsFormData) => {
+    console.log('Form submission started with data:', data);
+    
     try {
-      await updateSettings({
+      const settingsUpdate = {
         siteName: data.siteName,
         siteDescription: data.siteDescription,
         contactEmail: data.contactEmail,
@@ -127,7 +133,7 @@ const AdminSettings = () => {
           state: data.state,
           zipCode: data.zipCode,
           country: data.country,
-          type: 'work'
+          type: 'work' as const
         },
         socialLinks: {
           facebook: data.facebook,
@@ -149,17 +155,23 @@ const AdminSettings = () => {
           twilioAuthToken: '',
           twilioWhatsappNumber: ''
         }
-      });
+      };
 
+      console.log('Calling updateSettings with:', settingsUpdate);
+      await updateSettings(settingsUpdate);
+
+      console.log('Settings updated successfully, invalidating cache');
       queryClient.invalidateQueries({ queryKey: ['settings'] });
+      
       toast({
         title: "Success",
         description: "Settings updated successfully",
       });
     } catch (error) {
+      console.error('Settings update error:', error);
       toast({
         title: "Error",
-        description: "Failed to update settings",
+        description: `Failed to update settings: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     }
@@ -208,7 +220,7 @@ const AdminSettings = () => {
                   id="taxRate"
                   type="number"
                   step="0.01"
-                  {...register('taxRate', { required: 'Tax rate is required', min: 0 })}
+                  {...register('taxRate', { required: 'Tax rate is required', min: 0, valueAsNumber: true })}
                   placeholder="8.25"
                 />
                 {errors.taxRate && <p className="text-red-500 text-sm">{errors.taxRate.message}</p>}
@@ -225,9 +237,16 @@ const AdminSettings = () => {
               {errors.siteDescription && <p className="text-red-500 text-sm">{errors.siteDescription.message}</p>}
             </div>
             <div className="flex items-center space-x-2">
-              <Switch
-                id="maintenanceMode"
-                {...register('maintenanceMode')}
+              <Controller
+                name="maintenanceMode"
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    id="maintenanceMode"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                )}
               />
               <Label htmlFor="maintenanceMode">Maintenance Mode</Label>
             </div>
@@ -394,9 +413,16 @@ const AdminSettings = () => {
               </div>
               
               <div className="flex items-center space-x-2">
-                <Switch
-                  id="emailEnabled"
-                  {...register('emailEnabled')}
+                <Controller
+                  name="emailEnabled"
+                  control={control}
+                  render={({ field }) => (
+                    <Switch
+                      id="emailEnabled"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
                 />
                 <Label htmlFor="emailEnabled">Enable Email Notifications</Label>
               </div>
@@ -461,9 +487,16 @@ const AdminSettings = () => {
               </div>
               
               <div className="flex items-center space-x-2">
-                <Switch
-                  id="whatsappEnabled"
-                  {...register('whatsappEnabled')}
+                <Controller
+                  name="whatsappEnabled"
+                  control={control}
+                  render={({ field }) => (
+                    <Switch
+                      id="whatsappEnabled"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
                 />
                 <Label htmlFor="whatsappEnabled">Enable WhatsApp Notifications</Label>
               </div>
