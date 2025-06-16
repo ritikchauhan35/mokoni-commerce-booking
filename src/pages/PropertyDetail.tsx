@@ -1,6 +1,5 @@
-
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Calendar, Users, ArrowLeft, MapPin, Star } from 'lucide-react';
 import { useProperty } from '@/hooks/useProperties';
 import { useToast } from '@/hooks/use-toast';
+import { createBooking } from '@/services/bookings';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -15,12 +15,21 @@ const PropertyDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { data: property, isLoading } = useProperty(id!);
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [guests, setGuests] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [isBooking, setIsBooking] = useState(false);
 
-  const handleBooking = () => {
+  // Guest details form
+  const [guestDetails, setGuestDetails] = useState({
+    name: '',
+    email: '',
+    phone: ''
+  });
+
+  const handleBooking = async () => {
     if (!checkIn || !checkOut) {
       toast({
         title: "Error",
@@ -39,11 +48,52 @@ const PropertyDetail = () => {
       return;
     }
 
-    toast({
-      title: "Booking Initiated",
-      description: "Redirecting to booking confirmation...",
-    });
-    // In a real app, you'd process the booking
+    if (!guestDetails.name || !guestDetails.email) {
+      toast({
+        title: "Error",
+        description: "Please fill in your name and email",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsBooking(true);
+
+    try {
+      const nights = Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24));
+      const total = nights * property!.price * 1.1; // Including service fee
+
+      const booking = await createBooking({
+        propertyId: property!.id,
+        userId: 'guest-user', // In real app, use actual user ID
+        checkIn,
+        checkOut,
+        guests,
+        total,
+        status: 'pending',
+        paymentStatus: 'pending',
+        guestDetails
+      });
+
+      toast({
+        title: "Booking Successful!",
+        description: "Your booking has been confirmed. Redirecting...",
+      });
+
+      // Redirect to confirmation page
+      setTimeout(() => {
+        navigate(`/booking-confirmation/${booking.id}`);
+      }, 1500);
+    } catch (error) {
+      console.error('Booking error:', error);
+      toast({
+        title: "Booking Failed",
+        description: "Please try again or contact support",
+        variant: "destructive",
+      });
+    } finally {
+      setIsBooking(false);
+    }
   };
 
   if (isLoading) {
@@ -231,6 +281,42 @@ const PropertyDetail = () => {
                   />
                 </div>
 
+                {/* Guest Details Form */}
+                <div className="space-y-3 pt-4 border-t border-olive-200">
+                  <h4 className="font-medium text-olive-800">Guest Information</h4>
+                  <div>
+                    <Label htmlFor="guestName" className="text-olive-700">Full Name</Label>
+                    <Input
+                      id="guestName"
+                      value={guestDetails.name}
+                      onChange={(e) => setGuestDetails({...guestDetails, name: e.target.value})}
+                      className="border-olive-300"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="guestEmail" className="text-olive-700">Email</Label>
+                    <Input
+                      id="guestEmail"
+                      type="email"
+                      value={guestDetails.email}
+                      onChange={(e) => setGuestDetails({...guestDetails, email: e.target.value})}
+                      className="border-olive-300"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="guestPhone" className="text-olive-700">Phone (Optional)</Label>
+                    <Input
+                      id="guestPhone"
+                      value={guestDetails.phone}
+                      onChange={(e) => setGuestDetails({...guestDetails, phone: e.target.value})}
+                      className="border-olive-300"
+                      placeholder="+1 (555) 123-4567"
+                    />
+                  </div>
+                </div>
+
                 {nights > 0 && (
                   <div className="space-y-2 p-3 bg-pearl-50 rounded">
                     <div className="flex justify-between text-olive-700">
@@ -251,10 +337,11 @@ const PropertyDetail = () => {
 
                 <Button 
                   onClick={handleBooking}
+                  disabled={isBooking}
                   className="w-full bg-olive-600 hover:bg-olive-700 py-3"
                 >
                   <Calendar className="mr-2 h-4 w-4" />
-                  Book Now
+                  {isBooking ? 'Processing...' : 'Book Now'}
                 </Button>
               </CardContent>
             </Card>

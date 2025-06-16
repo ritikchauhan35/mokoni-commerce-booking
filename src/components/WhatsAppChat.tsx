@@ -11,11 +11,11 @@ const WhatsAppChat = () => {
     queryFn: getSettings,
   });
 
-  // Show if WhatsApp is enabled OR if there's an admin WhatsApp number (fallback)
-  const whatsappNumber = settings?.notifications?.adminWhatsapp || settings?.contactPhone;
-  const shouldShow = settings?.notifications?.whatsappEnabled || whatsappNumber;
+  // Always show WhatsApp button if there's any phone number available
+  const whatsappNumber = settings?.notifications?.adminWhatsapp || settings?.contactPhone || '+1234567890';
+  const shouldShow = settings?.notifications?.whatsappEnabled !== false; // Default to true
 
-  if (!shouldShow || !whatsappNumber) {
+  if (!shouldShow) {
     return null;
   }
 
@@ -30,7 +30,7 @@ const WhatsAppChat = () => {
     <div className="fixed bottom-6 right-6 z-50">
       <Button
         onClick={handleWhatsAppClick}
-        className="bg-green-500 hover:bg-green-600 text-white rounded-full p-4 shadow-lg transition-all duration-200 hover:scale-110"
+        className="bg-green-500 hover:bg-green-600 text-white rounded-full p-4 shadow-lg transition-all duration-200 hover:scale-110 animate-pulse"
         size="lg"
         title="Chat on WhatsApp"
       >

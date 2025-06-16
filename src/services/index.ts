@@ -13,6 +13,7 @@ export * from './orders';
 
 // Bookings
 export * from './bookings';
+export * from './bookingNotifications';
 
 // Reviews
 export * from './reviews';
