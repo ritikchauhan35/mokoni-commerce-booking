@@ -41,14 +41,14 @@ export const createBooking = async (booking: Omit<Booking, 'id'>) => {
   // Send booking notifications
   try {
     const settings = await getSettings();
-    if (settings.notifications) {
+    if (settings?.notifications) {
       await sendBookingConfirmation({
         bookingId: bookingRef.id,
         propertyName: booking.propertyId, // In real app, you'd get actual property name
         customerName: booking.guestDetails.name,
         customerEmail: booking.guestDetails.email,
-        checkIn: booking.checkIn,
-        checkOut: booking.checkOut,
+        checkIn: booking.checkIn, // Keep as string
+        checkOut: booking.checkOut, // Keep as string
         guests: booking.guests,
         total: booking.total,
         status: booking.status
