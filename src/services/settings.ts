@@ -13,21 +13,21 @@ const defaultSettings: SiteSettings = {
   id: SETTINGS_DOC_ID,
   siteName: 'Mokoni',
   siteDescription: 'Your trusted marketplace for premium products and unique experiences',
-  contactEmail: 'info@mokoni.com',
-  contactPhone: '+1 (555) 123-4567',
+  contactEmail: 'support@mokoni.com',
+  contactPhone: '+1 (855) 665-6641',
   address: {
-    street: '123 Business Avenue',
-    city: 'Commerce City',
+    street: '1234 Commerce Street',
+    city: 'San Francisco',
     state: 'California',
-    zipCode: '90210',
+    zipCode: '94102',
     country: 'United States',
     type: 'work'
   },
   socialLinks: {
-    facebook: 'https://facebook.com/mokoni',
-    instagram: 'https://instagram.com/mokoni',
-    twitter: 'https://twitter.com/mokoni',
-    linkedin: 'https://linkedin.com/company/mokoni'
+    facebook: 'https://facebook.com/mokonistore',
+    instagram: 'https://instagram.com/mokonistore',
+    twitter: 'https://twitter.com/mokonistore',
+    linkedin: 'https://linkedin.com/company/mokonistore'
   },
   paymentMethods: ['card', 'paypal', 'cash_on_delivery'],
   shippingZones: [
@@ -56,7 +56,7 @@ const defaultSettings: SiteSettings = {
     emailEnabled: true,
     whatsappEnabled: true,
     adminEmail: 'admin@mokoni.com',
-    adminWhatsapp: '+1234567890',
+    adminWhatsapp: '+18556656641',
     twilioAccountSid: '',
     twilioAuthToken: '',
     twilioWhatsappNumber: '',

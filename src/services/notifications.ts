@@ -1,15 +1,16 @@
-
 import { NotificationConfig, OrderNotificationData } from '@/types/notifications';
 
-// Enhanced email notification with better error handling
+// Enhanced email notification with better error handling and debugging
 export const sendEmailNotification = async (
   to: string,
   subject: string,
   message: string,
   config: NotificationConfig
 ): Promise<{ success: boolean; message: string }> => {
+  console.log('Attempting to send email notification:', { to, subject, emailEnabled: config.emailEnabled });
+  
   if (!config.emailEnabled) {
-    console.log('Email notifications disabled');
+    console.log('Email notifications disabled in config');
     return { success: false, message: 'Email notifications are disabled' };
   }
 
@@ -21,44 +22,49 @@ export const sendEmailNotification = async (
   try {
     // Check if EmailJS is fully configured
     if (!config.emailjsServiceId || !config.emailjsTemplateId || !config.emailjsPublicKey) {
-      // Fallback: Create mailto link for manual sending
-      const mailtoLink = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(message)}`;
-      console.log(`EmailJS not configured. Manual email link: ${mailtoLink}`);
-      
-      // In a real browser environment, you could open the mailto link
-      // window.open(mailtoLink);
+      console.log('EmailJS configuration incomplete:', {
+        serviceId: !!config.emailjsServiceId,
+        templateId: !!config.emailjsTemplateId,
+        publicKey: !!config.emailjsPublicKey
+      });
       
       return { 
         success: false, 
-        message: 'EmailJS configuration incomplete. Check Service ID, Template ID, and Public Key.' 
+        message: 'EmailJS configuration incomplete. Please check Service ID, Template ID, and Public Key in settings.' 
       };
     }
 
     // Import EmailJS dynamically
+    console.log('Loading EmailJS library...');
     const emailjs = await import('@emailjs/browser');
     
     // Initialize EmailJS with public key
+    console.log('Initializing EmailJS with public key...');
     emailjs.default.init(config.emailjsPublicKey);
 
-    // Send email using EmailJS
+    // Prepare template parameters
     const templateParams = {
       to_email: to,
       subject: subject,
       message: message,
-      from_name: 'Mokoni Store'
+      from_name: 'Mokoni Store',
+      reply_to: config.adminEmail
     };
 
+    console.log('Sending email with params:', templateParams);
+
+    // Send email using EmailJS
     const response = await emailjs.default.send(
       config.emailjsServiceId,
       config.emailjsTemplateId,
       templateParams
     );
 
-    console.log(`Email sent successfully to: ${to}`, response);
-    return { success: true, message: 'Email sent successfully' };
+    console.log('EmailJS response:', response);
+    return { success: true, message: 'Email sent successfully via EmailJS' };
     
   } catch (error) {
-    console.error('Failed to send email:', error);
+    console.error('EmailJS send error:', error);
     return { 
       success: false, 
       message: `Failed to send email: ${error instanceof Error ? error.message : 'Unknown error'}` 
@@ -66,12 +72,14 @@ export const sendEmailNotification = async (
   }
 };
 
-// Enhanced WhatsApp notification with better validation
+// Enhanced WhatsApp notification with Twilio support
 export const sendWhatsAppNotification = async (
   phone: string,
   message: string,
   config: NotificationConfig
 ): Promise<{ success: boolean; message: string; whatsappUrl?: string }> => {
+  console.log('Attempting WhatsApp notification:', { phone, whatsappEnabled: config.whatsappEnabled });
+  
   if (!config.whatsappEnabled) {
     console.log('WhatsApp notifications disabled');
     return { success: false, message: 'WhatsApp notifications are disabled' };
@@ -89,15 +97,26 @@ export const sendWhatsAppNotification = async (
     if (!cleanPhone) {
       return { success: false, message: 'Invalid phone number format' };
     }
+
+    // Check if Twilio is configured for actual message sending
+    if (config.twilioAccountSid && config.twilioAuthToken && config.twilioWhatsappNumber) {
+      console.log('Twilio configured, attempting to send WhatsApp message...');
+      
+      try {
+        // Send actual WhatsApp message via Twilio
+        const twilioResponse = await sendTwilioWhatsApp(cleanPhone, message, config);
+        return twilioResponse;
+      } catch (twilioError) {
+        console.error('Twilio WhatsApp failed, falling back to wa.me link:', twilioError);
+        // Fall through to wa.me link generation
+      }
+    }
     
-    // Create WhatsApp wa.me link
+    // Fallback: Create WhatsApp wa.me link
     const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
     
-    console.log(`WhatsApp notification prepared for ${cleanPhone}:`, message);
+    console.log(`WhatsApp notification prepared for ${cleanPhone}`);
     console.log(`WhatsApp URL: ${whatsappUrl}`);
-    
-    // For future Twilio integration, you would make an HTTP request here
-    // const twilioResponse = await sendTwilioWhatsApp(phone, message, config);
     
     return { 
       success: true, 
@@ -112,6 +131,48 @@ export const sendWhatsAppNotification = async (
       message: `Failed to prepare WhatsApp message: ${error instanceof Error ? error.message : 'Unknown error'}` 
     };
   }
+};
+
+// New Twilio WhatsApp integration
+const sendTwilioWhatsApp = async (
+  phone: string,
+  message: string,
+  config: NotificationConfig
+): Promise<{ success: boolean; message: string }> => {
+  if (!config.twilioAccountSid || !config.twilioAuthToken || !config.twilioWhatsappNumber) {
+    throw new Error('Twilio configuration incomplete');
+  }
+
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${config.twilioAccountSid}/Messages.json`;
+  
+  const formData = new URLSearchParams();
+  formData.append('From', `whatsapp:${config.twilioWhatsappNumber}`);
+  formData.append('To', `whatsapp:+${phone}`);
+  formData.append('Body', message);
+
+  const credentials = btoa(`${config.twilioAccountSid}:${config.twilioAuthToken}`);
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Basic ${credentials}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.text();
+    throw new Error(`Twilio API error: ${response.status} - ${errorData}`);
+  }
+
+  const result = await response.json();
+  console.log('Twilio WhatsApp sent successfully:', result.sid);
+  
+  return { 
+    success: true, 
+    message: 'WhatsApp message sent successfully via Twilio' 
+  };
 };
 
 // Enhanced order notification with better customer data handling

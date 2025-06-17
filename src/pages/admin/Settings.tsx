@@ -38,6 +38,10 @@ interface SettingsFormData {
   emailjsServiceId: string;
   emailjsTemplateId: string;
   emailjsPublicKey: string;
+  // Twilio settings
+  twilioAccountSid: string;
+  twilioAuthToken: string;
+  twilioWhatsappNumber: string;
 }
 
 const AdminSettings = () => {
@@ -110,7 +114,10 @@ const AdminSettings = () => {
         adminWhatsapp: settings.notifications?.adminWhatsapp || '',
         emailjsServiceId: settings.notifications?.emailjsServiceId || '',
         emailjsTemplateId: settings.notifications?.emailjsTemplateId || '',
-        emailjsPublicKey: settings.notifications?.emailjsPublicKey || ''
+        emailjsPublicKey: settings.notifications?.emailjsPublicKey || '',
+        twilioAccountSid: settings.notifications?.twilioAccountSid || '',
+        twilioAuthToken: settings.notifications?.twilioAuthToken || '',
+        twilioWhatsappNumber: settings.notifications?.twilioWhatsappNumber || ''
       };
       
       console.log('Form data to set:', formData);
@@ -151,9 +158,9 @@ const AdminSettings = () => {
           emailjsServiceId: data.emailjsServiceId,
           emailjsTemplateId: data.emailjsTemplateId,
           emailjsPublicKey: data.emailjsPublicKey,
-          twilioAccountSid: '',
-          twilioAuthToken: '',
-          twilioWhatsappNumber: ''
+          twilioAccountSid: data.twilioAccountSid,
+          twilioAuthToken: data.twilioAuthToken,
+          twilioWhatsappNumber: data.twilioWhatsappNumber
         }
       };
 
@@ -434,7 +441,7 @@ const AdminSettings = () => {
                     id="adminEmail"
                     type="email"
                     {...register('adminEmail')}
-                    placeholder="admin@yoursite.com"
+                    placeholder="admin@mokoni.com"
                   />
                 </div>
                 <div>
@@ -469,14 +476,14 @@ const AdminSettings = () => {
                   <ol className="text-sm text-blue-700 space-y-1 list-decimal list-inside">
                     <li>Create an account at <a href="https://emailjs.com" target="_blank" rel="noopener noreferrer" className="underline">emailjs.com</a></li>
                     <li>Create an email service (Gmail, Outlook, etc.)</li>
-                    <li>Create an email template with variables: to_email, subject, message, from_name</li>
+                    <li>Create an email template with variables: to_email, subject, message, from_name, reply_to</li>
                     <li>Copy the Service ID, Template ID, and Public Key to the fields above</li>
                   </ol>
                 </div>
               )}
             </div>
 
-            {/* WhatsApp Settings */}
+            {/* WhatsApp Settings with Twilio */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-olive-700">WhatsApp Notifications</h3>
@@ -506,20 +513,56 @@ const AdminSettings = () => {
                 <Input
                   id="adminWhatsapp"
                   {...register('adminWhatsapp')}
-                  placeholder="+1234567890"
+                  placeholder="+18556656641"
                 />
                 <p className="text-sm text-olive-600 mt-1">
-                  Include country code (e.g., +1234567890)
+                  Include country code (e.g., +18556656641)
                 </p>
+              </div>
+
+              {/* Twilio Configuration */}
+              <div className="bg-purple-50 p-4 rounded-lg">
+                <h4 className="font-medium text-purple-800 mb-3">Twilio WhatsApp API (Optional - for automated sending)</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="twilioAccountSid">Twilio Account SID</Label>
+                    <Input
+                      id="twilioAccountSid"
+                      {...register('twilioAccountSid')}
+                      placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                      type="password"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="twilioAuthToken">Twilio Auth Token</Label>
+                    <Input
+                      id="twilioAuthToken"
+                      {...register('twilioAuthToken')}
+                      placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                      type="password"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="twilioWhatsappNumber">Twilio WhatsApp Number</Label>
+                    <Input
+                      id="twilioWhatsappNumber"
+                      {...register('twilioWhatsappNumber')}
+                      placeholder="+14155238886"
+                    />
+                    <p className="text-sm text-purple-600 mt-1">
+                      Your Twilio WhatsApp-enabled phone number (include country code)
+                    </p>
+                  </div>
+                </div>
               </div>
               
               {whatsappEnabled && (
                 <div className="bg-green-50 p-4 rounded-lg">
                   <h4 className="font-medium text-green-800 mb-2">WhatsApp Setup Notes:</h4>
                   <ul className="text-sm text-green-700 space-y-1 list-disc list-inside">
-                    <li>Current implementation uses wa.me links for manual message sending</li>
-                    <li>For automated WhatsApp messages, integrate with WhatsApp Business API</li>
-                    <li>Consider using Twilio WhatsApp API for production use</li>
+                    <li>Without Twilio: Uses wa.me links for manual message sending</li>
+                    <li>With Twilio: Automatically sends WhatsApp messages via API</li>
+                    <li>Get Twilio WhatsApp API access at <a href="https://console.twilio.com" target="_blank" rel="noopener noreferrer" className="underline">console.twilio.com</a></li>
                   </ul>
                 </div>
               )}

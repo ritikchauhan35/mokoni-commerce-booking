@@ -30,6 +30,7 @@ export const useCart = () => {
     try {
       const items = await getCartItems(user.uid);
       setCartItems(items);
+      console.log('Cart items loaded:', items);
     } catch (error) {
       console.error('Error loading cart:', error);
     } finally {
@@ -125,22 +126,39 @@ export const useCart = () => {
       });
     } catch (error) {
       console.error('Error removing from cart:', error);
+      toast({
+        title: "Error",
+        description: "Failed to remove item from cart",
+        variant: "destructive",
+      });
     }
   };
 
   const clearCart = async () => {
     try {
+      console.log('Clearing cart for user:', user?.uid || 'guest');
+      
       if (user) {
-        for (const item of cartItems) {
-          await removeFromCart(item.id);
-        }
-        await loadCartItems();
+        // Clear all items from Firebase for authenticated users
+        const clearPromises = cartItems.map(item => removeFromCart(item.id));
+        await Promise.all(clearPromises);
+        console.log('All cart items removed from Firebase');
+        await loadCartItems(); // Reload to ensure cart is empty
       } else {
+        // Clear guest cart from localStorage
         setCartItems([]);
         localStorage.removeItem('guestCart');
+        console.log('Guest cart cleared from localStorage');
       }
+      
+      console.log('Cart cleared successfully');
     } catch (error) {
       console.error('Error clearing cart:', error);
+      toast({
+        title: "Error",
+        description: "Failed to clear cart completely",
+        variant: "destructive",
+      });
     }
   };
 

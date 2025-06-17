@@ -114,6 +114,8 @@ const Checkout = () => {
 
   const onSubmit = async (data: CheckoutFormData) => {
     setIsProcessing(true);
+    console.log('Starting checkout process with data:', data);
+    
     try {
       // Validate address before proceeding
       const addressValidation = await validateAddress({
@@ -169,22 +171,36 @@ const Checkout = () => {
         createdAt: new Date()
       };
 
-      await createOrder(order);
+      console.log('Creating order:', order);
+      const createdOrder = await createOrder(order);
+      console.log('Order created successfully:', createdOrder);
 
+      // Clear cart ONLY after successful order creation
       if (!isDirectPurchase) {
+        console.log('Clearing cart after successful order...');
         await clearCart();
+        console.log('Cart cleared successfully');
       }
 
       toast({
         title: "Order placed successfully!",
-        description: `Order total: ₹${total.toFixed(2)}`,
+        description: `Order total: ₹${total.toFixed(2)}. You will receive a confirmation email shortly.`,
       });
 
-      navigate('/');
+      // Navigate to confirmation page or home
+      navigate('/booking-confirmation', { 
+        state: { 
+          orderId: createdOrder.id,
+          orderTotal: total,
+          customerName: `${data.firstName} ${data.lastName}`
+        } 
+      });
+      
     } catch (error) {
+      console.error('Checkout error:', error);
       toast({
-        title: "Error",
-        description: "Failed to process your order. Please try again.",
+        title: "Order Failed",
+        description: "Failed to process your order. Please try again. If the problem persists, contact support.",
         variant: "destructive",
       });
     } finally {
