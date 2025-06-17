@@ -31,6 +31,7 @@ import AdminHeroSlides from "./pages/admin/HeroSlides";
 import AdminAnalytics from "./pages/admin/Analytics";
 import AdminSettings from "./pages/admin/Settings";
 import Checkout from "./pages/Checkout";
+import OrderConfirmation from "./pages/OrderConfirmation";
 import BookingConfirmation from "./pages/BookingConfirmation";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,7 @@ const AppContent = () => {
       <Route path="/property/:id" element={<PropertyDetail />} />
       <Route path="/cart" element={<Cart />} />
       <Route path="/checkout" element={<Checkout />} />
+      <Route path="/order-confirmation" element={<OrderConfirmation />} />
       <Route path="/booking-confirmation" element={<BookingConfirmation />} />
       <Route path="/about" element={<About />} />
       <Route path="/contact" element={<Contact />} />

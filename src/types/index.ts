@@ -71,19 +71,25 @@ export interface CartItem {
 export interface Order {
   id: string;
   userId: string;
-  items: OrderItem[];
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  items: Array<{
+    productId: string;
+    quantity: number;
+    price: number;
+    name: string;
+  }>;
   total: number;
   subtotal: number;
   tax: number;
   shipping: number;
   status: 'pending' | 'confirmed' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  shippingAddress: Address;
-  billingAddress?: Address;
-  paymentMethod: 'cash_on_delivery' | 'card' | 'paypal' | 'upi' | { type: string; last4?: string; upiId?: string };
   paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded';
-  trackingNumber?: string;
-  estimatedDelivery?: Date;
-  notes?: string;
+  paymentMethod: 'cash_on_delivery' | 'card' | 'paypal' | 'upi';
+  shippingAddress: Address;
+  orderNumber?: string;
+  orderDate?: string;
   createdAt: Date;
   updatedAt?: Date;
 }

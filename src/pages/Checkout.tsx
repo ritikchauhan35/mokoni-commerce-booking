@@ -146,8 +146,12 @@ const Checkout = () => {
         paymentMethodValue = 'card';
       }
 
+      const customerName = `${data.firstName} ${data.lastName}`;
       const order = {
         userId: user?.uid || 'guest',
+        customerName: customerName,
+        customerEmail: data.email,
+        customerPhone: data.phone,
         items: checkoutItems.map(item => ({
           productId: item.productId,
           quantity: item.quantity,
@@ -187,12 +191,12 @@ const Checkout = () => {
         description: `Order total: ₹${total.toFixed(2)}. You will receive a confirmation email shortly.`,
       });
 
-      // Navigate to confirmation page or home
-      navigate('/booking-confirmation', { 
+      // Navigate to order confirmation page (not booking confirmation)
+      navigate('/order-confirmation', { 
         state: { 
           orderId: createdOrder.id,
           orderTotal: total,
-          customerName: `${data.firstName} ${data.lastName}`
+          customerName: customerName
         } 
       });
       

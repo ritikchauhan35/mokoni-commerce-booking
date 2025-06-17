@@ -72,21 +72,24 @@ export const sendEmailNotification = async (
   }
 };
 
-// Enhanced WhatsApp notification with Twilio support
+// Enhanced WhatsApp notification with better error handling and debugging
 export const sendWhatsAppNotification = async (
   phone: string,
   message: string,
   config: NotificationConfig
 ): Promise<{ success: boolean; message: string; whatsappUrl?: string }> => {
-  console.log('Attempting WhatsApp notification:', { phone, whatsappEnabled: config.whatsappEnabled });
+  console.log('🔄 Starting WhatsApp notification process...');
+  console.log('📞 Phone:', phone);
+  console.log('⚙️ WhatsApp enabled:', config.whatsappEnabled);
+  console.log('📱 Admin WhatsApp:', config.adminWhatsapp);
   
   if (!config.whatsappEnabled) {
-    console.log('WhatsApp notifications disabled');
+    console.log('❌ WhatsApp notifications disabled');
     return { success: false, message: 'WhatsApp notifications are disabled' };
   }
 
   if (!config.adminWhatsapp) {
-    console.log('Admin WhatsApp number not configured');
+    console.log('❌ Admin WhatsApp number not configured');
     return { success: false, message: 'Admin WhatsApp number not configured' };
   }
 
@@ -95,28 +98,43 @@ export const sendWhatsAppNotification = async (
     const cleanPhone = phone.replace(/\D/g, '');
     
     if (!cleanPhone) {
+      console.log('❌ Invalid phone number format');
       return { success: false, message: 'Invalid phone number format' };
     }
 
+    console.log('🧹 Cleaned phone number:', cleanPhone);
+
     // Check if Twilio is configured for actual message sending
     if (config.twilioAccountSid && config.twilioAuthToken && config.twilioWhatsappNumber) {
-      console.log('Twilio configured, attempting to send WhatsApp message...');
+      console.log('🔧 Twilio credentials found, attempting API call...');
+      console.log('📋 Twilio SID:', config.twilioAccountSid ? `${config.twilioAccountSid.slice(0, 8)}...` : 'Not set');
+      console.log('🔑 Twilio Token:', config.twilioAuthToken ? 'Set (hidden)' : 'Not set');
+      console.log('📱 Twilio WhatsApp Number:', config.twilioWhatsappNumber);
       
       try {
         // Send actual WhatsApp message via Twilio
         const twilioResponse = await sendTwilioWhatsApp(cleanPhone, message, config);
+        console.log('✅ Twilio WhatsApp sent successfully:', twilioResponse);
         return twilioResponse;
       } catch (twilioError) {
-        console.error('Twilio WhatsApp failed, falling back to wa.me link:', twilioError);
+        console.error('❌ Twilio WhatsApp failed:', twilioError);
+        console.log('🔄 Falling back to wa.me link...');
         // Fall through to wa.me link generation
       }
+    } else {
+      console.log('⚠️ Twilio not fully configured, using wa.me link');
+      console.log('Twilio config check:', {
+        hasSid: !!config.twilioAccountSid,
+        hasToken: !!config.twilioAuthToken,
+        hasWhatsappNumber: !!config.twilioWhatsappNumber
+      });
     }
     
     // Fallback: Create WhatsApp wa.me link
     const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
     
-    console.log(`WhatsApp notification prepared for ${cleanPhone}`);
-    console.log(`WhatsApp URL: ${whatsappUrl}`);
+    console.log(`✅ WhatsApp notification prepared for ${cleanPhone}`);
+    console.log(`🔗 WhatsApp URL: ${whatsappUrl}`);
     
     return { 
       success: true, 
@@ -125,7 +143,7 @@ export const sendWhatsAppNotification = async (
     };
     
   } catch (error) {
-    console.error('Failed to prepare WhatsApp message:', error);
+    console.error('❌ Failed to prepare WhatsApp message:', error);
     return { 
       success: false, 
       message: `Failed to prepare WhatsApp message: ${error instanceof Error ? error.message : 'Unknown error'}` 
@@ -133,53 +151,101 @@ export const sendWhatsAppNotification = async (
   }
 };
 
-// New Twilio WhatsApp integration
+// Enhanced Twilio WhatsApp integration with better error handling
 const sendTwilioWhatsApp = async (
   phone: string,
   message: string,
   config: NotificationConfig
 ): Promise<{ success: boolean; message: string }> => {
+  console.log('🚀 Attempting Twilio WhatsApp send...');
+  
   if (!config.twilioAccountSid || !config.twilioAuthToken || !config.twilioWhatsappNumber) {
     throw new Error('Twilio configuration incomplete');
   }
 
+  // Clean the WhatsApp number for Twilio
+  const cleanTwilioNumber = config.twilioWhatsappNumber.replace(/\D/g, '');
+  const cleanRecipientPhone = phone.replace(/\D/g, '');
+  
+  console.log('📞 Sending from:', `+${cleanTwilioNumber}`);
+  console.log('📞 Sending to:', `+${cleanRecipientPhone}`);
+
   const url = `https://api.twilio.com/2010-04-01/Accounts/${config.twilioAccountSid}/Messages.json`;
   
   const formData = new URLSearchParams();
-  formData.append('From', `whatsapp:${config.twilioWhatsappNumber}`);
-  formData.append('To', `whatsapp:+${phone}`);
+  formData.append('From', `whatsapp:+${cleanTwilioNumber}`);
+  formData.append('To', `whatsapp:+${cleanRecipientPhone}`);
   formData.append('Body', message);
 
   const credentials = btoa(`${config.twilioAccountSid}:${config.twilioAuthToken}`);
 
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Basic ${credentials}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: formData,
+  console.log('🌐 Making Twilio API request...');
+  console.log('🔗 URL:', url);
+  console.log('📝 Body:', {
+    From: `whatsapp:+${cleanTwilioNumber}`,
+    To: `whatsapp:+${cleanRecipientPhone}`,
+    Body: message.substring(0, 50) + '...'
   });
 
-  if (!response.ok) {
-    const errorData = await response.text();
-    throw new Error(`Twilio API error: ${response.status} - ${errorData}`);
-  }
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${credentials}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: formData,
+    });
 
-  const result = await response.json();
-  console.log('Twilio WhatsApp sent successfully:', result.sid);
-  
-  return { 
-    success: true, 
-    message: 'WhatsApp message sent successfully via Twilio' 
-  };
+    console.log('📡 Twilio response status:', response.status);
+    
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('❌ Twilio API error response:', errorData);
+      throw new Error(`Twilio API error: ${response.status} - ${errorData}`);
+    }
+
+    const result = await response.json();
+    console.log('✅ Twilio WhatsApp sent successfully:', result.sid);
+    
+    return { 
+      success: true, 
+      message: `WhatsApp message sent successfully via Twilio (SID: ${result.sid})` 
+    };
+  } catch (fetchError) {
+    console.error('❌ Twilio API fetch failed:', fetchError);
+    if (fetchError instanceof TypeError && fetchError.message.includes('Failed to fetch')) {
+      throw new Error('Network error: Unable to reach Twilio API. Please check your internet connection and Twilio credentials.');
+    }
+    throw fetchError;
+  }
 };
 
 // Enhanced order notification with better customer data handling
 export const sendOrderNotification = async (
-  orderData: OrderNotificationData,
+  orderData: {
+    orderId: string;
+    customerName: string;
+    customerEmail?: string;
+    customerPhone?: string;
+    total: number;
+    status: string;
+    items: Array<{
+      name: string;
+      quantity: number;
+      price: number;
+    }>;
+  },
   config: NotificationConfig
 ): Promise<{ emailResult?: any; whatsappResult?: any }> => {
+  console.log('📧 Starting order notification process...');
+  console.log('🛒 Order data:', {
+    orderId: orderData.orderId.slice(0, 8),
+    customerName: orderData.customerName,
+    total: orderData.total,
+    itemCount: orderData.items.length
+  });
+
   const orderDate = new Date().toLocaleString();
   const emailSubject = `🛒 New Order #${orderData.orderId.slice(0, 8)} - Mokoni Store`;
   
@@ -188,19 +254,21 @@ export const sendOrderNotification = async (
 
 📋 Order Details:
 • Order ID: #${orderData.orderId.slice(0, 8)}
-• Customer: ${orderData.customerName || 'N/A'}
-• Total Amount: $${orderData.total.toFixed(2)}
+• Customer: ${orderData.customerName}
+${orderData.customerEmail ? `• Email: ${orderData.customerEmail}` : ''}
+${orderData.customerPhone ? `• Phone: ${orderData.customerPhone}` : ''}
+• Total Amount: ₹${orderData.total.toFixed(2)}
 • Status: ${orderData.status.toUpperCase()}
 • Date: ${orderDate}
 
 📦 Items Ordered:
 ${orderData.items.map(item => 
-  `• ${item.name} × ${item.quantity} = $${(item.price * item.quantity).toFixed(2)}`
+  `• ${item.name} × ${item.quantity} = ₹${(item.price * item.quantity).toFixed(2)}`
 ).join('\n')}
 
 💰 Order Summary:
-• Subtotal: $${orderData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
-• Total: $${orderData.total.toFixed(2)}
+• Subtotal: ₹${orderData.items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toFixed(2)}
+• Total: ₹${orderData.total.toFixed(2)}
 
 🚀 Next Steps:
 Please check your admin panel to process this order and update the customer on shipping details.
@@ -213,6 +281,7 @@ Mokoni Store Management System
 
   // Send email notification
   if (config.emailEnabled && config.adminEmail) {
+    console.log('📧 Sending email notification...');
     const emailResult = await sendEmailNotification(config.adminEmail, emailSubject, emailMessage, config);
     results.emailResult = emailResult;
     
@@ -225,12 +294,14 @@ Mokoni Store Management System
 
   // Send WhatsApp notification
   if (config.whatsappEnabled && config.adminWhatsapp) {
+    console.log('📱 Sending WhatsApp notification...');
     const whatsappMessage = `🛒 *New Order Alert!*
 
 Order #${orderData.orderId.slice(0, 8)}
-💰 Total: $${orderData.total.toFixed(2)}
+💰 Total: ₹${orderData.total.toFixed(2)}
 📦 Items: ${orderData.items.length}
-👤 Customer: ${orderData.customerName || 'N/A'}
+👤 Customer: ${orderData.customerName}
+${orderData.customerPhone ? `📞 Phone: ${orderData.customerPhone}` : ''}
 🕐 Time: ${orderDate}
 
 Check your admin panel for details! 🚀`;
@@ -240,10 +311,18 @@ Check your admin panel for details! 🚀`;
     
     if (whatsappResult.success) {
       console.log('✅ Order WhatsApp notification prepared successfully');
+      if (whatsappResult.whatsappUrl) {
+        console.log('🔗 WhatsApp URL:', whatsappResult.whatsappUrl);
+      }
     } else {
       console.log('❌ Failed to prepare WhatsApp notification:', whatsappResult.message);
     }
   }
+
+  console.log('📊 Notification results:', {
+    email: results.emailResult?.success || false,
+    whatsapp: results.whatsappResult?.success || false
+  });
 
   return results;
 };

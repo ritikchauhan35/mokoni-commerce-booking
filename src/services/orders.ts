@@ -26,17 +26,19 @@ export const createOrder = async (order: Omit<Order, 'id'>) => {
 
   const orderRef = await addDoc(collection(db, 'orders'), orderData);
 
-  // Send notification to admin
+  // Send notification to admin with proper customer data
   try {
     const settings = await getSettings();
     if (settings.notifications) {
       await sendOrderNotification({
         orderId: orderRef.id,
-        customerName: order.userId, // In real app, you'd get actual customer name
+        customerName: order.customerName || 'Unknown Customer',
+        customerEmail: order.customerEmail || '',
+        customerPhone: order.customerPhone || '',
         total: order.total,
         status: order.status,
         items: order.items.map(item => ({
-          name: item.productId, // In real app, you'd get actual product name
+          name: item.name || item.productId,
           quantity: item.quantity,
           price: item.price
         }))
