@@ -10,7 +10,6 @@ import { getSettings } from "@/services/settings";
 import AdminRoute from "@/components/admin/AdminRoute";
 import AdminLayout from "@/components/admin/AdminLayout";
 import MaintenanceMode from "@/components/MaintenanceMode";
-import WhatsAppChat from "@/components/WhatsAppChat";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import Properties from "./pages/Properties";
@@ -56,90 +55,87 @@ const AppContent = () => {
   }
 
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/products" element={<Products />} />
-        <Route path="/product/:id" element={<ProductDetail />} />
-        <Route path="/properties" element={<Properties />} />
-        <Route path="/property/:id" element={<PropertyDetail />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/booking-confirmation" element={<BookingConfirmation />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        
-        {/* Admin Routes */}
-        <Route path="/admin" element={
-          <AdminRoute>
-            <AdminLayout>
-              <AdminDashboard />
-            </AdminLayout>
-          </AdminRoute>
-        } />
-        <Route path="/admin/hero-slides" element={
-          <AdminRoute>
-            <AdminLayout>
-              <AdminHeroSlides />
-            </AdminLayout>
-          </AdminRoute>
-        } />
-        <Route path="/admin/products" element={
-          <AdminRoute>
-            <AdminLayout>
-              <AdminProducts />
-            </AdminLayout>
-          </AdminRoute>
-        } />
-        <Route path="/admin/properties" element={
-          <AdminRoute>
-            <AdminLayout>
-              <AdminProperties />
-            </AdminLayout>
-          </AdminRoute>
-        } />
-        <Route path="/admin/orders" element={
-          <AdminRoute>
-            <AdminLayout>
-              <AdminOrders />
-            </AdminLayout>
-          </AdminRoute>
-        } />
-        <Route path="/admin/bookings" element={
-          <AdminRoute>
-            <AdminLayout>
-              <AdminBookings />
-            </AdminLayout>
-          </AdminRoute>
-        } />
-        <Route path="/admin/users" element={
-          <AdminRoute>
-            <AdminLayout>
-              <AdminUsers />
-            </AdminLayout>
-          </AdminRoute>
-        } />
-        <Route path="/admin/analytics" element={
-          <AdminRoute>
-            <AdminLayout>
-              <AdminAnalytics />
-            </AdminLayout>
-          </AdminRoute>
-        } />
-        <Route path="/admin/settings" element={
-          <AdminRoute>
-            <AdminLayout>
-              <AdminSettings />
-            </AdminLayout>
-          </AdminRoute>
-        } />
-        
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      <WhatsAppChat />
-    </>
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="/products" element={<Products />} />
+      <Route path="/product/:id" element={<ProductDetail />} />
+      <Route path="/properties" element={<Properties />} />
+      <Route path="/property/:id" element={<PropertyDetail />} />
+      <Route path="/cart" element={<Cart />} />
+      <Route path="/checkout" element={<Checkout />} />
+      <Route path="/booking-confirmation" element={<BookingConfirmation />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      
+      {/* Admin Routes */}
+      <Route path="/admin" element={
+        <AdminRoute>
+          <AdminLayout>
+            <AdminDashboard />
+          </AdminLayout>
+        </AdminRoute>
+      } />
+      <Route path="/admin/hero-slides" element={
+        <AdminRoute>
+          <AdminLayout>
+            <AdminHeroSlides />
+          </AdminLayout>
+        </AdminRoute>
+      } />
+      <Route path="/admin/products" element={
+        <AdminRoute>
+          <AdminLayout>
+            <AdminProducts />
+          </AdminLayout>
+        </AdminRoute>
+      } />
+      <Route path="/admin/properties" element={
+        <AdminRoute>
+          <AdminLayout>
+            <AdminProperties />
+          </AdminLayout>
+        </AdminRoute>
+      } />
+      <Route path="/admin/orders" element={
+        <AdminRoute>
+          <AdminLayout>
+            <AdminOrders />
+          </AdminLayout>
+        </AdminRoute>
+      } />
+      <Route path="/admin/bookings" element={
+        <AdminRoute>
+          <AdminLayout>
+            <AdminBookings />
+          </AdminLayout>
+        </AdminRoute>
+      } />
+      <Route path="/admin/users" element={
+        <AdminRoute>
+          <AdminLayout>
+            <AdminUsers />
+          </AdminLayout>
+        </AdminRoute>
+      } />
+      <Route path="/admin/analytics" element={
+        <AdminRoute>
+          <AdminLayout>
+            <AdminAnalytics />
+          </AdminLayout>
+        </AdminRoute>
+      } />
+      <Route path="/admin/settings" element={
+        <AdminRoute>
+          <AdminLayout>
+            <AdminSettings />
+          </AdminLayout>
+        </AdminRoute>
+      } />
+      
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 };
 
