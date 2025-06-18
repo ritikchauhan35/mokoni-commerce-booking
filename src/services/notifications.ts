@@ -1,3 +1,4 @@
+
 import { NotificationConfig, OrderNotificationData } from '@/types/notifications';
 
 // Enhanced email notification with better error handling and debugging
@@ -42,7 +43,7 @@ export const sendEmailNotification = async (
     console.log('Initializing EmailJS with public key...');
     emailjs.default.init(config.emailjsPublicKey);
 
-    // Prepare template parameters
+    // Prepare template parameters - Fixed field names to match your template
     const templateParams = {
       to_email: to,
       subject: subject,
@@ -163,18 +164,22 @@ const sendTwilioWhatsApp = async (
     throw new Error('Twilio configuration incomplete');
   }
 
-  // Clean the WhatsApp number for Twilio
+  // Clean the WhatsApp number for Twilio - ensure proper format
   const cleanTwilioNumber = config.twilioWhatsappNumber.replace(/\D/g, '');
   const cleanRecipientPhone = phone.replace(/\D/g, '');
   
-  console.log('📞 Sending from:', `+${cleanTwilioNumber}`);
-  console.log('📞 Sending to:', `+${cleanRecipientPhone}`);
+  // Format WhatsApp numbers properly for Twilio
+  const fromWhatsApp = `whatsapp:+${cleanTwilioNumber}`;
+  const toWhatsApp = `whatsapp:+${cleanRecipientPhone}`;
+  
+  console.log('📞 Sending from:', fromWhatsApp);
+  console.log('📞 Sending to:', toWhatsApp);
 
   const url = `https://api.twilio.com/2010-04-01/Accounts/${config.twilioAccountSid}/Messages.json`;
   
   const formData = new URLSearchParams();
-  formData.append('From', `whatsapp:+${cleanTwilioNumber}`);
-  formData.append('To', `whatsapp:+${cleanRecipientPhone}`);
+  formData.append('From', fromWhatsApp);
+  formData.append('To', toWhatsApp);
   formData.append('Body', message);
 
   const credentials = btoa(`${config.twilioAccountSid}:${config.twilioAuthToken}`);
@@ -182,8 +187,8 @@ const sendTwilioWhatsApp = async (
   console.log('🌐 Making Twilio API request...');
   console.log('🔗 URL:', url);
   console.log('📝 Body:', {
-    From: `whatsapp:+${cleanTwilioNumber}`,
-    To: `whatsapp:+${cleanRecipientPhone}`,
+    From: fromWhatsApp,
+    To: toWhatsApp,
     Body: message.substring(0, 50) + '...'
   });
 
@@ -202,7 +207,17 @@ const sendTwilioWhatsApp = async (
     if (!response.ok) {
       const errorData = await response.text();
       console.error('❌ Twilio API error response:', errorData);
-      throw new Error(`Twilio API error: ${response.status} - ${errorData}`);
+      
+      // Parse the error to provide better feedback
+      try {
+        const errorJson = JSON.parse(errorData);
+        if (errorJson.code === 63007) {
+          throw new Error(`Twilio WhatsApp Channel Error: The WhatsApp number ${fromWhatsApp} is not configured properly. Please check your Twilio Console to ensure this number is set up for WhatsApp messaging. Error: ${errorJson.message}`);
+        }
+        throw new Error(`Twilio API error (${errorJson.code}): ${errorJson.message}`);
+      } catch (parseError) {
+        throw new Error(`Twilio API error: ${response.status} - ${errorData}`);
+      }
     }
 
     const result = await response.json();
@@ -327,7 +342,6 @@ Check your admin panel for details! 🚀`;
   return results;
 };
 
-// Enhanced order status update notification
 export const sendOrderStatusNotification = async (
   orderId: string,
   newStatus: string,
@@ -380,7 +394,6 @@ Check admin panel for details! 📋`;
   return results;
 };
 
-// Configuration validation helper
 export const validateNotificationConfig = (config: NotificationConfig): {
   email: { valid: boolean; message: string };
   whatsapp: { valid: boolean; message: string };
